@@ -1960,7 +1960,7 @@ eelf_x86_64_cloudabi.c: $(srcdir)/emulparams/elf_x86_64_cloudabi.sh \
   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
 
 eelf_x86_64_hermit.c: $(srcdir)/emulparams/elf_x86_64_hermit.sh \
-  $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+  $(ELF_DEPS) $(srcdir)/scripttempl/elf-hermit.sc ${GEN_DEPENDS}
 	${GENSCRIPTS} elf_x86_64_hermit "$(tdir_elf_x86_64_hermit)"
 
 eelf_x86_64_fbsd.c: $(srcdir)/emulparams/elf_x86_64_fbsd.sh \
