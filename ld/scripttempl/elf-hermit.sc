@@ -46,12 +46,20 @@ SECTIONS
     *(.data)
     *(.data.*)
   }
-  .kbss ALIGN(4096) : AT(ADDR(.kbss)) {
+  .tdata : {
+	tls_start = .;
+        *(.tdata)
+  }
+  .tbss : {
+        *(.tbss)
+  }
+  tls_end = tls_start + SIZEOF(.tdata) + SIZEOF(.tbss);
+  .kbss : {
     kbss_start = .;
     *(.kbss)
   }
   kbss_end = .;
-  .bss ALIGN(4096) : AT(ADDR(.bss)) {
+  .bss : {
     __bss_start = .;
     *(.bss)
     *(.bss.*)
