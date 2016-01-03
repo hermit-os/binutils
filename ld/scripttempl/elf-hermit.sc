@@ -15,7 +15,7 @@ cat <<EOF
 OUTPUT_FORMAT("elf64-x86-64")
 OUTPUT_ARCH("i386:x86-64")
 ENTRY(_start)
-phys = 0x200000;
+phys = 0x800000;
 cores = 128;
 
 SECTIONS
@@ -79,33 +79,33 @@ SECTIONS
     KEEP (*(.dtors))
   }
   .jcr  : { KEEP (*(.jcr)) }
+  .got.plt : { *(.got.plt)  *(.igot.plt) }
   .data : {
     *(.data)
     *(.data.*)
   }
-  .tdata ALIGN(64) : AT(ADDR(.tdata)) {
-	tls_start = .;
-        *(.tdata)
-  }
-  .tbss : {
-        *(.tbss)
-  }
-  tls_end = tls_start + SIZEOF(.tdata) + SIZEOF(.tbss);
-  .percore ALIGN(64) : AT(ADDR(.percore)) {
+  .percore : {
+    . = ALIGN(64);
     percore_start = .;
     *(.percore)
     . = ALIGN(64);
     percore_end0 = .;
+    /* reserve space for more cores */
+    . += cores * (percore_end0 - percore_start) - (percore_end0 - percore_start);
+    percore_end = .;
+  }
+  .tdata : {
+     tls_start = .;
+     *(.tdata)
+  }
+  .tbss : {
+    hbss_start = .;
+     *(.tbss)
+    tls_end = .;
   }
   .kbss : {
-    /* reserve space for more cores */
-    . += cores * SIZEOF(.percore) - SIZEOF(.percore);
-    percore_end = .;
-    . = ALIGN(64);
-    kbss_start = .;
     *(.kbss)
   }
-  kbss_end = .;
   .bss : {
     __bss_start = .;
     *(.bss)
