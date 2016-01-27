@@ -100,6 +100,7 @@ SECTIONS
   }
   .tbss : {
     hbss_start = .;
+     *(.tcommon)
      *(.tbss)
     tls_end = .;
   }
