@@ -32,7 +32,7 @@ SECTIONS
   }
   .kdata : {
     *(.kdata)
-    *(.kdata.*) 
+    *(.kdata.*)
   }
   .init : {
     KEEP (*(SORT_NONE(.init)))
