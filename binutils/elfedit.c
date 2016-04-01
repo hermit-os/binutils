@@ -569,7 +569,8 @@ osabis[] =
   { ELFOSABI_OPENVMS, "OpenVMS" },
   { ELFOSABI_NSK, "NSK" },
   { ELFOSABI_AROS, "AROS" },
-  { ELFOSABI_FENIXOS, "FenixOS" }
+  { ELFOSABI_FENIXOS, "FenixOS" },
+  { ELFOSABI_HERMIT, "HermitCore" }
 };
 
 /* Return ELFOSABI_XXX for an OSABI string, OSABI.  */

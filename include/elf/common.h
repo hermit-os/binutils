@@ -74,6 +74,7 @@
 #define ELFOSABI_AROS	     15	/* AROS */
 #define ELFOSABI_FENIXOS     16 /* FenixOS */
 #define ELFOSABI_CLOUDABI    17 /* Nuxi CloudABI */
+#define ELFOSABI_HERMIT    0x42 /* HermitCore */
 #define ELFOSABI_C6000_ELFABI 64 /* Bare-metal TMS320C6000 */
 #define ELFOSABI_C6000_LINUX 65 /* Linux TMS320C6000 */
 #define ELFOSABI_ARM	     97	/* ARM */
