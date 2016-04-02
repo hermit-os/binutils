@@ -3372,6 +3372,7 @@ get_osabi_name (unsigned int osabi)
     case ELFOSABI_NSK:		return "HP - Non-Stop Kernel";
     case ELFOSABI_AROS:		return "AROS";
     case ELFOSABI_FENIXOS:	return "FenixOS";
+    case ELFOSABI_HERMIT:	return "HermiCore";
     default:
       if (osabi >= 64)
 	switch (elf_header.e_machine)
