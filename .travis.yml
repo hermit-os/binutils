@@ -23,4 +23,5 @@ script:
 after_success:
         - cd $TOPDIR
         - tar -czvf binutils.tar.gz tmp x86
+        - export SSHPASS=$DEPLOY_PASS
         - sshpass -e scp binutils.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
