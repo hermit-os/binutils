@@ -12,6 +12,6 @@ script:
         - export PATH=$PATH:/usr/local/bin
         - mkdir -p ../../tmp/binutils
         - cd ../../tmp/binutils
-        - ../../RWTH-OS/binutils/configure --target=x86_64-hermit --prefix=~/x86 --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls
+        - ../../RWTH-OS/binutils/configure --target=x86_64-hermit --prefix=../../x86 --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls
         - make
         - make install
