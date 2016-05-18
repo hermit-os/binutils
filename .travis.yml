@@ -6,12 +6,21 @@ language: c
 compiler: gcc
 before_install:
         - sudo apt-get -qq update
-        - sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev
+        - sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev sshpass
 env:
-        global: TOPDIR=`pwd`/../..
+        global:
+                - TOPDIR=`pwd`/../..
+                - secure: "bMUgM4u9ILEApTSMQwuFVBezhpu0qULztVz8g8Ys+MWLlzM1iRXcvVFSNTV5KvM8LC6aRy65gHCECEg/lnMbAdWplaGaSZwV87YuifDnE8NPeviOzmA+XLEVEay3FVJIcEuDnqUFSQTpkOWy1R15m3xglp0gfQpHjLnqUPtlnRYKRDVssNRy9B7z3pQMovk88p9+dpJCd8z6psegu3cR3qFGivKUs0KhGNYHKzPWYf0QtsldGNelrAwceeDXD8iGr7wpqq0qVzTXGNNqFM0c5omp4vlo0K4575pi2/nZE7K4DpoUz862nIlWFJa1utG3YIEUDKtSvQ26O67MSOD+qkskJEJZhQX00S4EQgOpER8IjPJ87tTrDGIkEBFJdu3ZeEfC5P5N5Dre7MKVKB4F2CTz0jyhzODa5kNQELGKSGFsKnaQtHGNLlkqkA4CEsXXgOV5pdvOyo3gkTUp75tm2gGJLJezaBVvjiPbEVcUIo8vtXrHw9Gpt42Kw4DyKw6bzqF3cThWjQvSfTGXlrjSCTAIpAOgaRIKW86G5VkqA/pWv1dHCpoG5c2zUdtiDG38+watZddD7+SsaYfxFW/aCIiv9ofsNRrcLcAD/Xz55MJeqgB07AFFIG23NOXeGcKwaLAzuAC3Zp6O0638nIm4aNRAiKa8SSuU2Q1Yv6gY3Sk="
+                - secure: "IUoIDzSfQE1z+W3iZCoQFyILXUVVpNcTfdkMIktxCN3pVZd9aoohckD3pYVb/N+vy9u8h8JEPgdDl6u16O+55hsWYo35Bf64XK7nibDCnfsAKfNElkeWvHZphTIN/npOVwFauvz+W9rXNsvfT8eMgbBR9eOW3e6/O1y7NUQ40DVZjl2hlgbkWiKVirQog/Yi4izYR5TyvHe4foZLBheKO0pZ37/LHfuipDqm347FltKk+0Oz6Tsi5pPHiL0n2jbll9caTkZo/edccnREDgZ8kcbr8J4DDNtCkv8LtNTY2XxS9S7pcvmvlzgyTG79HA3EP39hqiqJZvgqwwqykf5ODy6uOFZCft0vHV6L81ZxJacPJVJXPCtNhHc29a0ZZ5ZzyPoqpRW11Xsmdz1fCy/hOPXtztOX9bfsjv6deLkexe045NCmXgrTZOE9rWugZkd443HXq6epMePPAcOlg2DFzeKZYX1Vmwed4Nv8M5SEDE8EopuG3ibS8tXbeKXxCJucntOYSzijtgB+ji2veiLqnBJbU4blu2EE/cdWo6gawvkssgmwefwLzfjinuSIRHwpzg036gxpyCToG+DynJQtT7G7V5IbqQ03YHoKej5HzlLVpzWeHFddXHFzCSZdRAhnvaPZZGtEX/uFRjDr5x2H2CBRndAGBm+CHFVK6GQewlY="
+                - secure: "cU2LGfzDR3bt/SSyZNwyMBRIAnJ2S01b1elWl9xxn/bJkTUstyfJ9FTf/aBzLGt3Lv5p58p5q4R3PgPq4/VDgGDaXVVgU6PD5UBgver+RWgR4AuBcB9gHNTM5j8Bl8v7jjv4j5QMyO1dchgkjmqCEOopqcojqsmhcj2wgcENuO029PixPB2vlojiAjKIRHLSI9sHsCi04wG9NKT3HAbWaLtcm1bHDx6E6ph4gPNmrG4KbzWGQGRiqBF0mY5VYsJhcCuNtuDaF5ExogDQYnmZtiNrWRd01VtO/9sjKDTpnaJpnVnpuLwzdzu7cOqdEPFsuJa9ypd6LMvClukLs24v2lawGesbb6VxDjgd096vVc7GL4MCdh/b7BSa2BXgHfbe4TknEGGpd3cHoxnU4st6o4bEnjH5iRk6f1usjcK24+jsEGHBnRnA3GHuJgDFTZ0rtaXnoPqheW6a9NGSaqVqFzsY5Px0742YaEMAVlsVYZ8dzl4mo9XXLEkPfF+xqtAKsX/TBM/bUOBBi/fJZ7ZjueI/iLQ3mgcLXsLLLpxItfXKF138utYXAlgw+B8W9nW6m5H4fKRUP+dx1zoON7NNd9QLGcdq0N9Bob1G0ABrW1FjoXxaW6SgbVC9jIyEyglSg/4hyE+k+s06VduC0JpBUPURCAt2ftRRyVhkJEsrAVc="
+                - secure: "aTMWpOoruHDitvDk18bfGgpUOmHGFY3cdeu87vexluICyfEcKkinmPz8Y9LnK5Nk3egSMdrz3nixwZxjaFAjkrNfRyBivTSt6Z4kb+PemwX+CVxzVIzTd2cRgUro8EwIRrz8PrTqkLGCVdEZLIFMg4WMdZg3AQmJb7RTNJdi8H8QN8dJ6WO/wJSjIvkpN1cLqdSxTgH7KngqGR3xXy+dA4PtlI3GbV+lIHYadcaIkmozg9+C2ZCTs5JHexGliD4yMyVB/MZ/UQEarJookQFJZ+mCcZoDFDpixDIiHfy0a1SMTk84PWdHC0ILd/txAAQ9HuYEyuya+jn8gQNO0tqlaUt38+zp+lZ7FNneieDiTxs5CN/lCf1gC6STjwfeQoB8X9KruB0OVDaA1bI2jQO8ZED0c73KZhKrlTVdNZgTWg5SNrK0xbEvrw4a8XtFBdKeZi9IgAbC905kBFcsV4jgG1y2TgA/S1UeZ4WnklVf040rFrgR8kZR9m08OHnG5Xe1ilKHlGjLGwMcimZ1NcvOD5Z8c6yCStdbQiMej0Oo1b8RBbHtBBVbdui/xlCc/l9bnxIOmpOaT7BZdb58WGP04FoVad68MTjp5hR7Sna1P3tclnOJw70j2goM1TRtsNqIlIzKiI6TTJY0nX1LXh1zC8Oo8mY3oR+CR045PgaNGZE="
 script:
         - mkdir -p $TOPDIR/tmp/binutils
         - cd $TOPDIR/tmp/binutils
         - $TOPDIR/RWTH-OS/binutils/configure --target=x86_64-hermit --prefix=$TOPDIR/x86 --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls
-        - make
+        - make -j2
         - make install
+after_success:
+        - cd $TOPDIR
+        - tar -czvf binutils.tar.gz tmp x86
+        - sshpass -e scp binutils.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
