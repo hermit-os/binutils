@@ -14,7 +14,8 @@ before_script:
         - export TARGET=x86_64-hermit
         - export ARCH=x86
 script:
-        - mkdir -P ~/tmp/binutils
+        - mkdir -p ~/tmp/binutils
         - cd ~/tmp/binutils
         - $(TOPDIR)/configure --target=$(TARGET) --prefix=~/$(ARCH) --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls
         - make
+        - make install
