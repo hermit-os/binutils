@@ -10,11 +10,8 @@ before_install:
 script:
         - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
         - export PATH=$PATH:/usr/local/bin
-        - export TOPDIR=$(pwd)
-        - export TARGET=x86_64-hermit
-        - export ARCH=x86
         - mkdir -p ~/tmp/binutils
         - cd ~/tmp/binutils
-        - $(TOPDIR)/configure --target=$(TARGET) --prefix=~/$(ARCH) --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls
+        - ~/RWTH-OS/binutils/configure --target=x86_64-hermit --prefix=~/x86 --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls
         - make
         - make install
