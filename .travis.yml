@@ -23,8 +23,7 @@ after_success:
 - cd $TOPDIR
 - tar -czvf binutils.tar.gz tmp x86
 - export SSHPASS=$DEPLOY_PASS
-- ls -la
-- sshpass -e scp -o stricthostkeychecking=no binutils.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
+- sshpass -e scp -o stricthostkeychecking=no binutils.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH 2> /dev/null
 env:
    global:
      - TOPDIR=`pwd`/../..
