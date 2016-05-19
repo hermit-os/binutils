@@ -1,27 +1,33 @@
 sudo: required
 dist: trusty
 git:
-        submodules: false
+  submodules: false
 language: c
 compiler: gcc
 before_install:
-        - sudo apt-get -qq update
-        - sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev sshpass
+- sudo apt-get -qq update
+- sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev
+  sshpass
 env:
-        global:
-                - TOPDIR=`pwd`/../..
-                - secure: "bMUgM4u9ILEApTSMQwuFVBezhpu0qULztVz8g8Ys+MWLlzM1iRXcvVFSNTV5KvM8LC6aRy65gHCECEg/lnMbAdWplaGaSZwV87YuifDnE8NPeviOzmA+XLEVEay3FVJIcEuDnqUFSQTpkOWy1R15m3xglp0gfQpHjLnqUPtlnRYKRDVssNRy9B7z3pQMovk88p9+dpJCd8z6psegu3cR3qFGivKUs0KhGNYHKzPWYf0QtsldGNelrAwceeDXD8iGr7wpqq0qVzTXGNNqFM0c5omp4vlo0K4575pi2/nZE7K4DpoUz862nIlWFJa1utG3YIEUDKtSvQ26O67MSOD+qkskJEJZhQX00S4EQgOpER8IjPJ87tTrDGIkEBFJdu3ZeEfC5P5N5Dre7MKVKB4F2CTz0jyhzODa5kNQELGKSGFsKnaQtHGNLlkqkA4CEsXXgOV5pdvOyo3gkTUp75tm2gGJLJezaBVvjiPbEVcUIo8vtXrHw9Gpt42Kw4DyKw6bzqF3cThWjQvSfTGXlrjSCTAIpAOgaRIKW86G5VkqA/pWv1dHCpoG5c2zUdtiDG38+watZddD7+SsaYfxFW/aCIiv9ofsNRrcLcAD/Xz55MJeqgB07AFFIG23NOXeGcKwaLAzuAC3Zp6O0638nIm4aNRAiKa8SSuU2Q1Yv6gY3Sk="
-                - secure: "IUoIDzSfQE1z+W3iZCoQFyILXUVVpNcTfdkMIktxCN3pVZd9aoohckD3pYVb/N+vy9u8h8JEPgdDl6u16O+55hsWYo35Bf64XK7nibDCnfsAKfNElkeWvHZphTIN/npOVwFauvz+W9rXNsvfT8eMgbBR9eOW3e6/O1y7NUQ40DVZjl2hlgbkWiKVirQog/Yi4izYR5TyvHe4foZLBheKO0pZ37/LHfuipDqm347FltKk+0Oz6Tsi5pPHiL0n2jbll9caTkZo/edccnREDgZ8kcbr8J4DDNtCkv8LtNTY2XxS9S7pcvmvlzgyTG79HA3EP39hqiqJZvgqwwqykf5ODy6uOFZCft0vHV6L81ZxJacPJVJXPCtNhHc29a0ZZ5ZzyPoqpRW11Xsmdz1fCy/hOPXtztOX9bfsjv6deLkexe045NCmXgrTZOE9rWugZkd443HXq6epMePPAcOlg2DFzeKZYX1Vmwed4Nv8M5SEDE8EopuG3ibS8tXbeKXxCJucntOYSzijtgB+ji2veiLqnBJbU4blu2EE/cdWo6gawvkssgmwefwLzfjinuSIRHwpzg036gxpyCToG+DynJQtT7G7V5IbqQ03YHoKej5HzlLVpzWeHFddXHFzCSZdRAhnvaPZZGtEX/uFRjDr5x2H2CBRndAGBm+CHFVK6GQewlY="
-                - secure: "cU2LGfzDR3bt/SSyZNwyMBRIAnJ2S01b1elWl9xxn/bJkTUstyfJ9FTf/aBzLGt3Lv5p58p5q4R3PgPq4/VDgGDaXVVgU6PD5UBgver+RWgR4AuBcB9gHNTM5j8Bl8v7jjv4j5QMyO1dchgkjmqCEOopqcojqsmhcj2wgcENuO029PixPB2vlojiAjKIRHLSI9sHsCi04wG9NKT3HAbWaLtcm1bHDx6E6ph4gPNmrG4KbzWGQGRiqBF0mY5VYsJhcCuNtuDaF5ExogDQYnmZtiNrWRd01VtO/9sjKDTpnaJpnVnpuLwzdzu7cOqdEPFsuJa9ypd6LMvClukLs24v2lawGesbb6VxDjgd096vVc7GL4MCdh/b7BSa2BXgHfbe4TknEGGpd3cHoxnU4st6o4bEnjH5iRk6f1usjcK24+jsEGHBnRnA3GHuJgDFTZ0rtaXnoPqheW6a9NGSaqVqFzsY5Px0742YaEMAVlsVYZ8dzl4mo9XXLEkPfF+xqtAKsX/TBM/bUOBBi/fJZ7ZjueI/iLQ3mgcLXsLLLpxItfXKF138utYXAlgw+B8W9nW6m5H4fKRUP+dx1zoON7NNd9QLGcdq0N9Bob1G0ABrW1FjoXxaW6SgbVC9jIyEyglSg/4hyE+k+s06VduC0JpBUPURCAt2ftRRyVhkJEsrAVc="
-                - secure: "aTMWpOoruHDitvDk18bfGgpUOmHGFY3cdeu87vexluICyfEcKkinmPz8Y9LnK5Nk3egSMdrz3nixwZxjaFAjkrNfRyBivTSt6Z4kb+PemwX+CVxzVIzTd2cRgUro8EwIRrz8PrTqkLGCVdEZLIFMg4WMdZg3AQmJb7RTNJdi8H8QN8dJ6WO/wJSjIvkpN1cLqdSxTgH7KngqGR3xXy+dA4PtlI3GbV+lIHYadcaIkmozg9+C2ZCTs5JHexGliD4yMyVB/MZ/UQEarJookQFJZ+mCcZoDFDpixDIiHfy0a1SMTk84PWdHC0ILd/txAAQ9HuYEyuya+jn8gQNO0tqlaUt38+zp+lZ7FNneieDiTxs5CN/lCf1gC6STjwfeQoB8X9KruB0OVDaA1bI2jQO8ZED0c73KZhKrlTVdNZgTWg5SNrK0xbEvrw4a8XtFBdKeZi9IgAbC905kBFcsV4jgG1y2TgA/S1UeZ4WnklVf040rFrgR8kZR9m08OHnG5Xe1ilKHlGjLGwMcimZ1NcvOD5Z8c6yCStdbQiMej0Oo1b8RBbHtBBVbdui/xlCc/l9bnxIOmpOaT7BZdb58WGP04FoVad68MTjp5hR7Sna1P3tclnOJw70j2goM1TRtsNqIlIzKiI6TTJY0nX1LXh1zC8Oo8mY3oR+CR045PgaNGZE="
+  global:
+  - TOPDIR=`pwd`/../..
 script:
-        - mkdir -p $TOPDIR/tmp/binutils
-        - cd $TOPDIR/tmp/binutils
-        - $TOPDIR/RWTH-OS/binutils/configure --target=x86_64-hermit --prefix=$TOPDIR/x86 --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls
-        - make -j2
-        - make install
+- mkdir -p $TOPDIR/tmp/binutils
+- cd $TOPDIR/tmp/binutils
+- "$TOPDIR/RWTH-OS/binutils/configure --target=x86_64-hermit --prefix=$TOPDIR/x86
+  --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline
+  --disable-sim --disable-libssp --enable-tls"
+- make -j2
+- make install
 after_success:
-        - cd $TOPDIR
-        - tar -czvf binutils.tar.gz tmp x86
-        - export SSHPASS=$DEPLOY_PASS
-        - sshpass -e scp binutils.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
+- cd $TOPDIR
+- tar -czvf binutils.tar.gz tmp x86
+- export SSHPASS=$DEPLOY_PASS
+- sshpass -e scp binutils.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
+env:
+   global:
+     - TOPDIR=`pwd`/../..
+     - secure: qMY7gO3380NNAsWSr0jDBZVwGbcBDTVgwXUcKqs7ZgvmiyXa/MCw+JjFyciQo9caJ1OZ7qaZEJNhIzoJ9p6vfiBDd7GqCE5K8gVzwLgJjvvTAwCkh8U8W3I0tBHDEmr+mbo75eoXmGVcerD0QNtRPamblTjv8VCjDHu0CXL0h+g2Pd0Pxna4+dm5f68QDL/V/pH+LOOOD6FZ5SB8tgSagchpaZzzXibqREHj3Rq1gfOXJrOWNwKRN1cxBEK8dLoDabeDu9f3pZEShGdH2K3D3y7QaDKpU1KxsvFgSTFxW1w7G20j6a9eT6Ph16qLngkZ5t8kdfjOgw9Lc+xfyx8fP5GaOxU6bQItXS9sPzG0f+uMzTa0DRTNdPLhpYxWKNeVvs6J5AkM2sVTLfqeunTLK7NuVX5pL/gPrqVdd/0HdQvF8ve7Wr5TXB+nq6RVamJs3dk/cP8TcUsyhIacL5XGJxu5MQi1Pmamw/20YnesrE3FE6PQUo5MBT+hsWSIsA2NbljBnDZYCRFcH9UskXWT9JNOOj26AMES4lNMzxPkuRHlCG4SDJxZcmFpW1rC1bDZtQVb8xzRLOK80cVswSDNLpIjpVTjohnELKkZfh0oFDYpaGWPzVGoSZ+nUhWd8enxnhM6wihatw0/90vNmXusIk0oabW4duTVXRcOryLQd84=
+     - secure: bhUWyrEuEpf7BL2YRtduqMC+Oxro++z07/FTGh3YOt8tfgKsf9A/NtWstq7KcYkfFHRDV28pGzXyaOZfmGZ9En6nX03GC8/haY2GWWelsYkEFHzOayg0dkVa1uGDWjlzQCnL6BKVwRXOWiXmCKtNFHhX3LHXcoKmoJhwRHVVJG1czLMNFGRPcLROnySRa3b+5mlakbEPtVuTyCRc3r9mIExqPbLd8U+XEpK1ruFAfcsTXNdp5ZutUVR1YfvNEjhmJYyOkqu2/yoRL1gB3/HTyV65DpKJm+oPVkq0zcPOoOoTvVsBamhLGCCDHwGi+xPPJiivmPUkhuLnaH42/ehxpycv/2fMGgxcbYJlt3ud3U3yh72FOk3l1/Nvdyd+JDbLhD64PfPCskFxseJXR72Yps18sZ7viwxDvI39YYmrWtuxCl6rfWxr42uTcAzc/vTTC4wqPRmVfoMQjUAZKHrBglyglWw2Fpu3V1la2FiTQTznZD06WKHLBqt0ommbtFcm5iIbyt4aUuTBD2ke1JzPVWB3/trZY6CHL/c5aW+7KDtKr38exk8+XySwNIwdYpynLgKJEkVpPlJfUO6EU1ht60wpp3sSBVxZyG1ag9AfqCOIkdOmtv9KvPEArrYVwvfix9ye9b+Wsg89uy3SRN/8H4i98kPcBwgjgZznOy9pifc=
+     - secure: L666NBoojLDzudRo2ocmAdzEwIVT6SN0WOjO42dttorC3p5eYwc3yukwBkHrqrNR8p3+uWpg/b2HiZI8Fl+sthbm8mNHO+3loNea+s6XhMgo3bbxAGYqFbDy0vZflYY4liS1uGpUJ9gythCbQgjcull2+xrsfb7mDDwfJZQJweo1SYzAUOhm9YyzXSR+0gJZiJISi+PkTVahvbcn25aTMaFRqb17r7uR6WqvhCwd33yKtojkQHa15TU+GMbBciHFWx5P7oi6MZnehuxT5Us8d0RgwNWUPDP7spHJ3OmQqcZmJ2j4A35Xevkq4DbwiypVCwL0lXLnugDL7X13zpxYcQl1LNYK8LQ2jgxNHT582wwgbhj9/FxNapZcS1IeLaZSlEhF+yHbieDNZrIFCwSZtWqlUXpR8mS0fUDV5mY2sM9kK/NmXJMfA9dnfPRc3Zjg8Q7jZG6xgOiACcJ4qS8fA21zmpMsV4VsqfdKZ+GIr2s9G+jetPn1tsdxJZJQnOmtd6v7U6lF419foAdbf+fg6S4ZG0smdRt4bGkcF5XC2b4ZluHCJTMdhrAgHXzJ5opo396Z/cZLdkqc0bPKdxrnyF35jU5T6XfbXaFegLlQomOAgG7HtqUBJTdcQsvMcGt5T7mW7WZDJ4bL1IFiiNukdy3Edu4mUJYn2FiFqKPzPMw=
+     - secure: Z4Nb6PocubVCJksCS0vYyV5zeym7bijRg3ror+L9VSntrL7Z3a9BXLg9vQmL51QyutjP2AVTuen9D+iM+Bn47Jges5kkkH/vG3tX3Fvwhor0qqlB7b2OaVeCBrln4jTgrDfwIYoCZxFZj8hgRdQrgtf0KTcvW5mSqulCgG2J2WTfzi4OoM4fss8d6ZYRiWaHy/YMcudUnmJFnSZ58PTzHyTX6i/E8FA+QnJxS24wVvIEw8dEmq2o1ojOzZfYNi0uBXKUVs/o1KPY5iBrfopvhnU0DByIFf4GvGNqnVSNv1RB2frE9up2GC5zQ0JFkzzWO1PHux3UpKC2SxNZQHPpNpbyJ8lf8nVdxzEa2+BQuWXfHieZdnj3mYtsxG6yD9N5ua8OCGHfNYTVHAQ0aV676N44bNit5Lfhg6J5ZCObyuEfK5PQNz2neP1bDj4ACFA2DRo8I6/8jRiWGcsN5Sa8LLk9VCdWKSx15DEpUB/DHt+CYPehn/N3FbU37mWoTB8Xpd/hDgc0vA1hl3+b7kaSrVgmaRNzbatF8aJSf/6e4gz1Q7dq7QvKSbxkfSZRb1Mf/HcdO8liIEl+C+M51Up9r/icSQTp/LXR+Da37P9jTunvOKcC9Y+QnwnQyuJkxaTjWs7xLOhMxTcdv0xVdaiqVAbYhko1zW+mZ9TSIOLf3SI=
