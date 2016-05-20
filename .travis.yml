@@ -8,9 +8,6 @@ before_install:
 - sudo apt-get -qq update
 - sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev
   sshpass
-env:
-  global:
-  - TOPDIR=`pwd`/../..
 script:
 - mkdir -p $TOPDIR/tmp/binutils
 - cd $TOPDIR/tmp/binutils
@@ -21,7 +18,8 @@ script:
 - make install
 after_success:
 - cd $TOPDIR
-- tar -czvf binutils.tar.gz tmp x86
+- rm -rf tmp/binutils/*
+- tar -czf binutils.tar.gz tmp x86
 - export SSHPASS=$DEPLOY_PASS
 - sshpass -e scp -o stricthostkeychecking=no binutils.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH 2> /dev/null
 env:
