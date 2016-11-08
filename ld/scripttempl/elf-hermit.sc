@@ -16,7 +16,7 @@ OUTPUT_FORMAT("elf64-x86-64-hermit")
 OUTPUT_ARCH("i386:x86-64")
 ENTRY(_start)
 phys = 0x800000;
-cores = 128;
+cores = 256;
 
 SECTIONS
 {
