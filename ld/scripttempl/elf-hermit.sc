@@ -137,12 +137,11 @@ SECTIONS
   }
   .tdata : {
      tls_start = .;
-     *(.tdata)
+     *(.tdata .tdata.* .gnu.linkonce.td.*)
   }
   .tbss : {
     hbss_start = .;
-     *(.tcommon)
-     *(.tbss)
+    *(.tbss .tbss.* .gnu.linkonce.tb.*) *(.tcommon)
     tls_end = .;
   }
   .kbss : {
