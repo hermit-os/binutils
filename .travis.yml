@@ -13,10 +13,12 @@ script:
 - "$TOPDIR/RWTH-OS/binutils/configure --target=x86_64-hermit
   --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline
   --disable-sim --disable-libssp --enable-tls --disable-multilib"
-- $echo " " | dh_make -s -e slankes@eonerc.rwth-aachen.de --packagename binutils --copyright gpl2  --createorig
+- echo " " | dh_make -s -e slankes@eonerc.rwth-aachen.de --packagename binutils --copyright gpl2  --createorig
 - cat debian/rules
 - debuild -us -uc
 after_success:
+- ls -la
+- ls -la debian
 - cd $TOPDIR
 env:
    global:
