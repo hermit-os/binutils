@@ -8,8 +8,10 @@ before_install:
 - sudo apt-get -qq update
 - sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev packaging-dev sshpass
 script:
+- rm -rf .git
 - cd ..
 - mv binutils binutils-2.26.1
+- tar -czvf binutils_2.26.1.orig.tar.gz binutils-2.26.1
 - cd binutils-2.26.1
 - debuild -us -uc
 after_success:
