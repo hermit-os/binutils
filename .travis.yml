@@ -12,7 +12,7 @@ script:
 - mv binutils binutils-2.26.1
 - cd binutils-2.26.1
 - ls -la
-- echo " " | dh_make -s -e slankes@eonerc.rwth-aachen.de --packagename binutils --copyright gpl2  --createorig
+- $echo " " | dh_make -s -e slankes@eonerc.rwth-aachen.de --packagename binutils --copyright gpl2  --createorig
 - echo "" >> debian/rules
 - echo "override_dh_auto_configure:" >> debian/rules
 - echo -e "\tdh_auto_configure -- --target=x86_64-hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib" >> debian/rules
