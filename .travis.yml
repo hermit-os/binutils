@@ -8,9 +8,6 @@ before_install:
 - sudo apt-get -qq update
 - sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev packaging-dev sshpass
 script:
-- cd $TOPDIR
-- mv $TOPDIR/RWTH-OS/binutils $TOPDIR/RWTH-OS/binutils-2.26.1
-- cd $TOPDIR/RWTH-OS/binutils-2.26.1
 - "./configure --target=x86_64-hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber
   --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib"
 - ls -la
