@@ -13,7 +13,7 @@ script:
 - "$TOPDIR/RWTH-OS/binutils/configure --target=x86_64-hermit
   --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline
   --disable-sim --disable-libssp --enable-tls --disable-multilib"
-- dh_make -s -e slankes@eonerc.rwth-aachen.de --packagename binutils-x86_64-hermit --copyright gpl2  --createorig
+- $echo " " | dh_make -s -e slankes@eonerc.rwth-aachen.de --packagename binutils-x86_64-hermit-2.6.1 --copyright gpl2  --createorig
 - debuild -us -uc
 after_success:
 - cd $TOPDIR
