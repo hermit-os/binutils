@@ -11,13 +11,6 @@ script:
 - cd ..
 - mv binutils binutils-2.26.1
 - cd binutils-2.26.1
-- echo " " | dh_make -s -e slankes@eonerc.rwth-aachen.de --packagename binutils --copyright gpl2  --createorig
-- echo "" >> debian/rules
-- echo "override_dh_auto_configure:" >> debian/rules
-- echo -e "\tdh_auto_configure -- --target=x86_64-hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib" >> debian/rules
-- tar -czf debian.tar.gz debian
-- export SSHPASS=$DEPLOY_PASS
-- sshpass -e scp -o stricthostkeychecking=no debian.tar.gz $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH 2> /dev/null
 - debuild -us -uc
 after_success:
 - cd $TOPDIR
@@ -26,7 +19,3 @@ env:
      - TOPDIR=`pwd`/../..
      - DEBFULLNAME="Stefan Lankes"
      - DEBEMAIL="slankes@eonerc.rwth-aachen.de"
-     - secure: "pE/KrNLw3oV0v0Dg6nz5Qqgd54egem3H/2zuD5PSUvJ2msYrpt9yX+CLIWRgvA2cZtkq3aGnEc6cYe8m98Egp1WSx5aSWBZAFfbd3FgyCMds8ZQD9x7PJWe44gK2ErJxrKmY+DALsoxlfRlxT0JSerNI4ZDRyVdEKNCDhsYal9rdwv0gCqhbIJ0D+d9M8JlWCocq7Z86EBqe0vCpsrDLKWs+Y9IVfNFsttyzO+c49GTCMhN30UoIVpeCL1V+xGWP7fZTks69AIrJt3qrTAD0RA7eezSwmPcmTgJeqweFsBLbw4+ThIJzIoRyHba4Mx7p3OmxMbU9bzRS2WGr2lgMyNoJAnQsL1eCN3JkAPJHoh1t3yNr1Nkd22D32SkqDyCMhGv39BKGx5dDmZHx37SL22+JHN9VICLsxCcznUOIEAeA8lnPRd23+rwxbPXUtGH4V3AlKEnJ4jIV2XvlhhF7oUn4DDofQT2KwK9Z//M7IPYaJgmhVI8NUTGxMOOgZ+8IWdS3AA+VG6wO+bm7yfCw1h6a0xNGtrETG+ZySICoDxiM6wOPiZQEVF9V6BsU8a0JGW6Z0UWiSg9hwzBFBgPHUok/j2TSU2x2Or+kPa5RQY4CkS4bjnaAuhZISOAZIKEaNNyJN8MJnXejO5uM7wKVtATgSJNVosZelvcGrx6C4lU="
-     - secure: "lK7OZBX9PO1ti9Hij/czb34psGzrCHOO/+PxqX6OS8Eekw43EfdPP+SPy53wrA6TE+XgJ9fvtGM0rKCgzMPK3nl41U4NFMSj6r+NY41H6cWYoluQEmxIQuYaZ316MT7ktIaw8CRnoZk4tnl92fr9MQJ6H+1+JUp/jiNg3ia0VMsGWmuESB2I9yaBd54PRulrhxFhJkcZVCtQ+9uKdm9xt7AsMFb/5WDGkmdkbARa5MRcZF1/zI8x3eUFlSigfR9pDOKFVA18CSAuWTtkS1oGxAMhLP/sNxaU5xx4ny3F1qwol8SQN5dOPu/Yx/mS2NbaMmuOJPSJUoDHgbpi4dyLCD2iW/oFdPobb17unIn1SLKwzLPoffqocj2u5fBcqswGJ95g7eMmZ98goprMDwS9rFltEIsT6LanyIPU+EWjJdQx7l7Y+kTvXQUM1+foOqNJEvDqsxO44+oX9d8aMbJf5bVXUmc9ez4b8u7hJniy+C1UrEWBRrBWXPw70qCft9de5jISl1ZLI8B6xPCjuAegwWzKQfk3540sfuz2IALsJ8Jj4kMCFWAIUnB+Xl1v16WMY3GLyDAxMmGqb4yLtOZvA0j81G9cP7R+iRWQOM76eVRros0B+DXrgw41zsLliMupIvavT2LcriWnXjebKO7Hjs2gjaUQibWMyXdW5wiTqiY="
-     - secure: "Imcz+oZT/Ip/kZ8UsVr/U39HwFLyn/VSHcyFda5O8QCeTEQ7CTPE3rRbRo1rz5wej7aRas8vKdkQOd8vXu4LNmwkuehMt5lpAZozpmmJLk+cNOwxO7UOuQZfZey1HTiQAVMZFRjkG0qo0YaGl9SWe6Cmp1tneD0AfxdC+D+86rcO8NrrEdzpf8lQI7hcY5PwdRQExRcAZVv7WEGkzzieqPUK/5pzseMxKpPYhydQlkJvF4kidzJAbDoM9021JNpfQGBnOwFEDVB3tDE4S4F6XUrZGZcmJH4zS2Xn501NV6zqk/vjDhWeippeR9yB2Qbk695G0tLyHPjBf1g3P8wcxwwh10OKXEp8OnLy24NEgKerDs3ZqPByuzkcjG5nTouxtCD+mYpxDhZynCfnLK3/gbn1KZx5Ae9lq3txg1B1xwSaS3VNnpEjrJXV4HyXIG7LMckAMTh3WNJhbEOMjR0Vhgz3aiRCxp94lJRe9+mwQPVTsS/mm1i/Fs3ZUtHQwaWiUkaTjiyhUiXmYF1dxJ8BFS3dhX0df9eufRNIFTK0qU1mhuGmfG9rPKmUYMZTz6vMGgH2SW4k6mnu0Iw/y9rGPcxvRRwCdjbfWOzPQ/O/d/mXOmmEe9GOiVPf1uVjlvT1Obpc1hWwSnht8beolV5YWmHnNWAMwRUgKymzcTAlFqg="
-     - secure: "BlCcZI4CHS1QNxFBysZezFUZuEM5kM+QNEWZfRRBEE8zM5iqOspP3TTASM4WWLRHgVsKpC6xIUNggJ+pxXaumJudF/zrkFyArYNzEJDVFojWPKOdKa4I9hCBoiIu7mXDUwNa9NEl3UCzX/ASo4B4dXfPi4OIbvV/1TjUfaDJG51vlLaWgJC0mQ7pSAFVEB3d16lSwQ4KyubdRT+8rH3AjkaFdzKCrb5tPxTjQNc2Vfr5IBvuTiR+w8fKGVO7W22nQgPdNHpnA1Ix13ndNGqzrf0hw9VJX/I5Xo8oN2RjNeAKMesrurkxLXF0pi9e+CerDFiTATIPio+Ak9fwcOs3rw8/aGZ9DOHd3BzomVLi2VNvqDUGgulowSEFX0H9y2snf1zinWt0CRE4nVG4Lcg4yWG3gAe6clazpDIXpVoLgcecgfv3F+P8hQMSLTxhMWr8TxmMpf8yXFQaT1RCrZmO8ns9oD0NercWWFneXe3dPQUKPYc0C9Mn75kaQ4+cOT7+bA2UAu0Wr0Rb2R4WhUd1T5bLL8r8f6bEXs2W2fIdMjT7Wl+psoH4X1xJqhxkd7Zq7jdzc2XCN6c/JuOUMZD2V5OrU666wrv1X6QM8EwxVsEEoQkT8/y+5aCPJTA3+7CemeitP9lSmBwr65MG2E6KppglGG6EffJrRgy8MhFJ+9U="

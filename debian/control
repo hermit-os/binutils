@@ -1,0 +1,15 @@
+Source: binutils
+Section: devel
+Priority: optional
+Maintainer: Stefan Lankes <slankes@eonerc.rwth-aachen.de>
+Build-Depends: debhelper (>= 8.0.0), autotools-dev
+Standards-Version: 3.9.4
+Homepage: http://www.hermitcore.org
+#Vcs-Git: git://git.debian.org/collab-maint/binutils.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/binutils.git;a=summary
+
+Package: binutils-x86_64-hermit
+Architecture: x86_64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Cross-build binary utilities for x86_64-hermit
+Cross-build binary image generation, manipulation and query tools.

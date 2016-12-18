@@ -1,0 +1,10 @@
+# Defaults for binutils initscript
+# sourced by /etc/init.d/binutils
+# installed at /etc/default/binutils by the maintainer scripts
+
+#
+# This is a POSIX shell fragment
+#
+
+# Additional options that are passed to the Daemon.
+DAEMON_OPTS=""
