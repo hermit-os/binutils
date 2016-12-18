@@ -8,6 +8,9 @@ before_install:
 - sudo apt-get -qq update
 - sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev packaging-dev sshpass
 script:
+- cd ..
+- mv binutils binutils-2.26.1
+- cd binutils-2.26.1
 - ls -la
 - echo " " | dh_make -s -e slankes@eonerc.rwth-aachen.de --packagename binutils --copyright gpl2  --createorig
 - echo "" >> debian/rules
