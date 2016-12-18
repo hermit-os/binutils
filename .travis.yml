@@ -6,7 +6,7 @@ language: c
 compiler: gcc
 before_install:
 - sudo apt-get -qq update
-- sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev packaging-dev sshpass
+- sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev packaging-dev dh-make sshpass
 script:
 - mkdir -p $TOPDIR/tmp/binutils-2.26.1
 - cd $TOPDIR/tmp/binutils-2.26.1
