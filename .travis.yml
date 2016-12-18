@@ -11,6 +11,7 @@ script:
 - rm -rf .git
 - cd ..
 - mv binutils binutils-2.26.1
+- touch binutils_2.26.1-1_amd64.changes
 - tar -czf binutils_2.26.1.orig.tar.gz binutils-2.26.1
 - cd binutils-2.26.1
 - debuild -us -uc
