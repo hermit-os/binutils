@@ -9,7 +9,7 @@ Homepage: http://www.hermitcore.org
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/binutils.git;a=summary
 
 Package: binutils-hermit
-Architecture: amd64
+Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Cross-build binary utilities for HermitCore
  Cross-build binary image generation, manipulation and query tools.
