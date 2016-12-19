@@ -1,7 +1,7 @@
 {
     "package": {
-        "name": "binutils-amd64-hermit",
-        "repo": "HermitCore",
+        "name": "HermitCore",
+        "repo": "binutils-amd64-hermit",
         "subject": "Cross-build binary utilities for HermitCore",
         "website_url": "www.hermitcore.org",
         "issue_tracker_url": "https://github.com/RWTH-OS/binutils/issues",
@@ -17,9 +17,6 @@
         "desc": "Cross-build binary utilities for HermitCore",
         "released": "2016-12-19",
         "vcs_tag": "2.6.1",
-        "attributes": [{"name": "VerAtt1", "values" : ["VerVal1"], "type": "string"},
-                       {"name": "VerAtt2", "values" : [1, 3.3, 5], "type": "number"},
-                       {"name": "VerAtt3", "values" : ["2016-12-19T19:43:37+0100"], "type": "date"}],
         "gpgSign": false
     },
 
