@@ -1,6 +1,7 @@
 sudo: required
 dist: trusty
 git:
+  depth: 3
   submodules: false
 language: c
 compiler: gcc
@@ -21,4 +22,3 @@ env:
      - TOPDIR=`pwd`/../..
      - DEBFULLNAME="Stefan Lankes"
      - DEBEMAIL="slankes@eonerc.rwth-aachen.de"
-     - DEBUILD_TGZ_CHECK="no"
