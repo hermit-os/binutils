@@ -16,14 +16,12 @@ script:
 - tar -czf binutils_2.26.1.orig.tar.gz binutils-2.26.1
 - cd binutils-2.26.1
 - debuild -us -uc
-- cd ..
-- ls -la
 after_success:
 - ls -la
 deploy:
   on: hermit
   provider: bintray
-  file: binutils-hermit_2.26.1-1_amd64.deb
+  file: bintray.json
   user: stlankes 
   key:
     secure: i5nU5aeJ0Yt4v55nUH68q7/Bjc00kaFzYVFjzkuRGpdPfwKbPVDNMSjOUNnP4umzsLH0hJq2fFOrAvV7IQYjAFLiS/3nmaiC9IARK2If5GsqiEwCvXZ1/jpVB48YhHqhWkCVm3TnSH4q7wJ+KGD62HmtglTdRAcc9pZode9zeAxHPdBTisHxc3Zahf5fqr9O4McjdDwY5C6Bf0A24Bmbe/qpB6dmOC9dXxHcY1mn3xdZ5GMkJNmfS6AtMaBgA9cNAeOXHfSQK3+0RssnXyzt9pnNnQNHY62BUCRNTd0LqzVTcASZOpNGZ5xuuJnvNmyVMqpHvU1+dCIXZUclV5hGRT0hmwByXIHTOnKB0xUrUB7ztZ2gGyej5cZ/rPLLuGPVqkbR3OkmeT0B8Dqle3qkBVAlHHCpHjCR+joce9Nf8qrw/Czrp0idFtPXas8r52w5MiIRdA25MOLRXuWmtZj6fxIk5iPFf2THzwUV4R0TNu+5BVfS7ECyuBM8l9N6P+Ad6rIEBtmeayU+hoYXhqFahISARNgbpCOqjwNggwxYIuFkp2iNkCGMGAjsmLoTd3UJDt8mNuSDKrhPc2L+CY2QRjzmbnGpPzpO7NBiG8WDaHVwGe1D1a98V3qAyOCr0pqlzOR6tVdoN6p3WesYrABTPfrq2bwCExVTXrpy5jx7rfA=
