@@ -1,8 +1,8 @@
 {
     "package": {
-        "name": "HermitCore",
-        "repo": "binutils-amd64-hermit",
-        "subject": "Cross-build binary utilities for HermitCore",
+        "name": "binutils-amd64-hermit",
+	"repo": "HermitCore",
+        "subject": "rwth-os",
         "website_url": "www.hermitcore.org",
         "issue_tracker_url": "https://github.com/RWTH-OS/binutils/issues",
         "vcs_url": "https://github.com/RWTH-OS/binutils.git",
