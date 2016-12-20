@@ -19,8 +19,9 @@
     },
 
     "files":
-    [{"includePattern": "../(binutils*.deb)", "uploadPattern": "$1",
-    "matrixParams": {
+    [{
+      "includePattern": "../(binutils.*deb)", "uploadPattern": "$1",
+      "matrixParams": {
         "deb_distribution": "vivid",
         "deb_component": "main",
         "deb_architecture": "amd64"},
