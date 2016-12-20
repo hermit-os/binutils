@@ -1,9 +1,9 @@
 {
     "package": {
-        "name": "binutils-amd64-hermit",
-	"repo": "HermitCore",
+        "name": "binutils",
+	"repo": "hermitcore",
         "subject": "rwth-os",
-        "website_url": "www.hermitcore.org",
+        "website_url": "http://www.hermitcore.org",
         "issue_tracker_url": "https://github.com/RWTH-OS/binutils/issues",
         "vcs_url": "https://github.com/RWTH-OS/binutils.git",
         "github_release_notes_file": "RELEASE",
@@ -15,8 +15,6 @@
     "version": {
         "name": "2.6.1",
         "desc": "Cross-build binary utilities for HermitCore",
-        "released": "2016-12-19",
-        "vcs_tag": "2.6.1",
         "gpgSign": false
     },
 
