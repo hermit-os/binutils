@@ -17,7 +17,7 @@ script:
 - cd binutils-2.26.1
 - debuild -us -uc
 deploy:
-  on: hermit
+  on: production
   provider: bintray
   file: .bintray_descriptor.json
   user:
