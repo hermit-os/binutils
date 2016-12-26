@@ -27,3 +27,4 @@ deploy:
 env:
   global:
   - TOPDIR=`pwd`/../..
+  - PREFIX=/opt/hermit

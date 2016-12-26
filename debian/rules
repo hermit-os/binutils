@@ -8,4 +8,4 @@ export DH_VERBOSE=1
 	dh $@  #--with autotools-dev
 
 override_dh_auto_configure:
-	dh_auto_configure -- --target=x86_64-hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib --datarootdir=/usr/share/hermit --prefix=/opt/hermit --datadir=/opt/hermit/share --infodir=/opt/hermit/share/info --mandir=/opt/hermit/share/man
+	dh_auto_configure -- --target=x86_64-hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib --prefix=/opt/hermit
