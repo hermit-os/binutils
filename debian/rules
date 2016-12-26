@@ -9,3 +9,6 @@ export DH_VERBOSE=1
 
 override_dh_auto_configure:
 	dh_auto_configure -- --target=x86_64-hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib --prefix=/opt/hermit
+
+override_dh_auto_install:
+	dh_auto_install -- prefix=/opt/hermit
