@@ -130,7 +130,7 @@ manpage.1: manpage.sgml
     </para>
     <para>
       On Debian systems, the complete text of the GNU General Public
-      License can be found in /usr/share/common-licenses/GPL.
+      License can be found in /opt/hermit/share/common-licenses/GPL.
     </para>
 
   </refsect1>

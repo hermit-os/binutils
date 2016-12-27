@@ -8,14 +8,14 @@
           -''-param man.charmap.use.subset "0" \
           -''-param make.year.ranges "1" \
           -''-param make.single.year.ranges "1" \
-          /usr/share/xml/docbook/stylesheet/docbook-xsl/manpages/docbook.xsl \
+          /opt/hermit/share/xml/docbook/stylesheet/docbook-xsl/manpages/docbook.xsl \
           manpage.xml'
 
 A manual page <package>.<section> will be generated. You may view the
 manual page with: nroff -man <package>.<section> | less'. A typical entry
 in a Makefile or Makefile.am is:
 
-DB2MAN = /usr/share/sgml/docbook/stylesheet/xsl/docbook-xsl/manpages/docbook.xsl
+DB2MAN = /opt/hermit/share/sgml/docbook/stylesheet/xsl/docbook-xsl/manpages/docbook.xsl
 XP     = xsltproc -''-nonet -''-param man.charmap.use.subset "0"
 
 manpage.1: manpage.xml
@@ -34,7 +34,7 @@ AUTHOR(S) and COPYRIGHT sections. In this case, please add them manually as
 <refsect1> ... </refsect1>.
 
 To disable the automatic creation of the AUTHOR(S) and COPYRIGHT sections
-read /usr/share/doc/docbook-xsl/doc/manpages/authors.html. This file can be
+read /opt/hermit/share/doc/docbook-xsl/doc/manpages/authors.html. This file can be
 found in the docbook-xsl-doc-html package.
 
 Validation can be done using: `xmllint -''-noout -''-valid manpage.xml`
@@ -88,7 +88,7 @@ man(1), man(7), http://www.tldp.org/HOWTO/Man-Page/
         the Free Software Foundation.</para>
       <para>On Debian systems, the complete text of the GNU General Public
         License can be found in
-        <filename>/usr/share/common-licenses/GPL</filename>.</para>
+        <filename>/opt/hermit/share/common-licenses/GPL</filename>.</para>
     </legalnotice>
   </refentryinfo>
   <refmeta>

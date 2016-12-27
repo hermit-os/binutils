@@ -12,7 +12,7 @@
 ;; xemacs19, emacs20, xemacs20...).  The compiled code is then
 ;; installed in a subdirectory of the respective site-lisp directory.
 ;; We have to add this to the load-path:
-(let ((package-dir (concat "/usr/share/"
+(let ((package-dir (concat "/opt/hermit/share/"
                            (symbol-name debian-emacs-flavor)
                            "/site-lisp/binutils")))
 ;; If package-dir does not exist, the binutils package must have

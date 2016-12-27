@@ -7,14 +7,14 @@ Abstract: This manual describes what binutils is
 Section: unknown
 
 Format: debiandoc-sgml
-Files: /usr/share/doc/binutils/binutils.sgml.gz
+Files: /opt/hermit/share/doc/binutils/binutils.sgml.gz
 
 Format: postscript
-Files: /usr/share/doc/binutils/binutils.ps.gz
+Files: /opt/hermit/share/doc/binutils/binutils.ps.gz
 
 Format: text
-Files: /usr/share/doc/binutils/binutils.text.gz
+Files: /opt/hermit/share/doc/binutils/binutils.text.gz
 
 Format: HTML
-Index: /usr/share/doc/binutils/html/index.html
-Files: /usr/share/doc/binutils/html/*.html
+Index: /opt/hermit/share/doc/binutils/html/index.html
+Files: /opt/hermit/share/doc/binutils/html/*.html

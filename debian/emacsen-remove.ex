@@ -11,5 +11,5 @@ if [ ${FLAVOR} != emacs ]; then
     fi
 
     echo remove/${PACKAGE}: purging byte-compiled files for ${FLAVOR}
-    rm -rf /usr/share/${FLAVOR}/site-lisp/${PACKAGE}
+    rm -rf /opt/hermit/share/${FLAVOR}/site-lisp/${PACKAGE}
 fi
