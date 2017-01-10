@@ -142,6 +142,7 @@ enum ELFOSABI
   ELFOSABI_OPENVMS = 13,
   ELFOSABI_NSK = 14,
   ELFOSABI_AROS = 15,
+  ELFOSABI_HERMIT = 66,
   // A GNU extension for the ARM.
   ELFOSABI_ARM = 97,
   // A GNU extension for the MSP.
