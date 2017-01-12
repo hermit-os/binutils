@@ -8,4 +8,4 @@ export DH_VERBOSE=1
 	dh $@  --builddirectory=../builddeb #--with autotools-dev
 
 override_dh_auto_configure:
-	mkdir -p ../builddeb; cd ../builddeb; ../binutils-2.26.1/configure --target=x86_64-hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib --prefix=/opt/hermit
+	mkdir -p ../builddeb; cd ../builddeb; ../binutils-2.26.1/configure --target=x86_64-hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib --prefix=/opt/hermit --with-sysroot
