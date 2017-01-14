@@ -17,4 +17,4 @@ override_dh_auto_install:
 	dh_auto_install
 
 	# delete files that would cause conflicts with other packages
-	rm -f `pwd`/debian/gcc/opt/hermit/share/info/dir
+	rm -f debian/binutils-hermit/opt/hermit/share/info/dir
