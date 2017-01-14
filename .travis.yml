@@ -16,6 +16,7 @@ script:
 - tar -czf binutils_2.26.1.orig.tar.gz binutils-2.26.1
 - cd binutils-2.26.1
 - time debuild -us -uc -j2
+- md5sum ../*.deb
 deploy:
   on: production
   provider: bintray
