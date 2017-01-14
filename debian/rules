@@ -9,3 +9,12 @@ export DH_VERBOSE=1
 
 override_dh_auto_configure:
 	mkdir -p build; cd build; ../configure --target=x86_64-hermit --prefix=/opt/hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib
+
+overrid_dh_auto_test:
+	@echo "No automatic tests"
+
+override_dh_auto_install:
+	dh_auto_install
+
+	# delete files that would cause conflicts with other packages
+	rm -f `pwd`/debian/gcc/opt/hermit/share/info/dir
