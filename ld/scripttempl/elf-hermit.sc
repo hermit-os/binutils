@@ -151,6 +151,7 @@ SECTIONS
     __bss_start = .;
     *(.bss .bss.* .gnu.linkonce.b.*)
     *(COMMON)
+    *(LARGE_COMMON)
   }
   kernel_end = .;
   /* Stabs debugging sections.  */
