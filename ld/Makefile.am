@@ -1650,11 +1650,11 @@ eaarch64cloudabib.c: $(srcdir)/emulparams/aarch64cloudabib.sh $(srcdir)/emulpara
 
 eaarch64hermit.c: $(srcdir)/emulparams/elfaarch64-hermit.sh \
   $(ELF_DEPS) $(srcdir)/emultempl/aarch64elf.em $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
-  ${GENSCRIPTS} elfaarch64-hermit "$(tdir_elfaarch64_hermit)"
+	${GENSCRIPTS} elfaarch64-hermit "$(tdir_elfaarch64_hermit)"
 
 eaarch64hermitb.c: $(srcdir)/emulparams/elfaarch64-hermit.sh \
   $(ELF_DEPS) $(srcdir)/emultempl/aarch64elf.em $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
-  ${GENSCRIPTS} elfaarch64-hermit "$(tdir_elfaarch64_hermit)"
+	${GENSCRIPTS} elfaarch64-hermit "$(tdir_elfaarch64_hermit)"
 
 eaarch64fbsd.c: $(srcdir)/emulparams/aarch64fbsd.sh \
   $(ELF_DEPS) $(srcdir)/emultempl/aarch64elf.em \
@@ -2022,7 +2022,7 @@ eelf_x86_64_cloudabi.c: $(srcdir)/emulparams/elf_x86_64_cloudabi.sh \
 
 eelf_x86_64_hermit.c: $(srcdir)/emulparams/elf_x86_64_hermit.sh \
   $(ELF_DEPS) $(srcdir)/scripttempl/elfx86_64-hermit.sc ${GEN_DEPENDS}
-  ${GENSCRIPTS} elf_x86_64_hermit "$(tdir_elf_x86_64_hermit)"
+	${GENSCRIPTS} elf_x86_64_hermit "$(tdir_elf_x86_64_hermit)"
 
 eelf_x86_64_fbsd.c: $(srcdir)/emulparams/elf_x86_64_fbsd.sh \
   $(srcdir)/emulparams/elf_x86_64.sh \
