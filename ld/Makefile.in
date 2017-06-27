@@ -3238,13 +3238,13 @@ eaarch64cloudabib.c: $(srcdir)/emulparams/aarch64cloudabib.sh $(srcdir)/emulpara
   $(ELF_DEPS) $(srcdir)/emultempl/aarch64elf.em \
   $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
 
-eaarch64hermit.c: $(srcdir)/emulparams/elfaarch64-hermit.sh \
-  $(ELF_DEPS) $(srcdir)/emultempl/aarch64elf.em $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
-	${GENSCRIPTS} elfaarch64-hermit "$(tdir_elfaarch64_hermit)"
+eaarch64hermit.c: $(srcdir)/emulparams/aarch64hermit.sh \
+  $(ELF_DEPS) $(srcdir)/scripttempl/elfaarch64hermit.sc ${GEN_DEPENDS}
+	${GENSCRIPTS} aarch64hermit "$(tdir_eaarch64hermit)"
 
-eaarch64hermitb.c: $(srcdir)/emulparams/elfaarch64-hermitb.sh $(srcdir)/emulparams/elfaarch64-hermit.sh \
-  $(ELF_DEPS) $(srcdir)/emultempl/aarch64elf.em $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
-	${GENSCRIPTS} elfaarch64-hermit "$(tdir_elfaarch64_hermit)"
+eaarch64hermitb.c: $(srcdir)/emulparams/aarch64hermitb.sh \
+  $(ELF_DEPS) $(srcdir)/scripttempl/elfaarch64hermit.sc ${GEN_DEPENDS}
+	${GENSCRIPTS} aarch64hermitb "$(tdir_eaarch64hermit)"
 
 eaarch64fbsd.c: $(srcdir)/emulparams/aarch64fbsd.sh \
   $(ELF_DEPS) $(srcdir)/emultempl/aarch64elf.em \
