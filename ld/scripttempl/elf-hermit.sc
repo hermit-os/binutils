@@ -1,4 +1,4 @@
-# Copyright (C) 2017, Stefan Lankes, RWTH Aachen University
+# Copyright (C) 2015-2017, Stefan Lankes, RWTH Aachen University
 #
 # Copying and distribution of this file, with or without modification,
 # are permitted in any medium without royalty provided the copyright
@@ -6,14 +6,14 @@
 #
 
 cat <<EOF
-/* Copyright (C) 2015, Stefan Lankes, RWTH Aachen University
+/* Copyright (C) 2015-2017, Stefan Lankes, RWTH Aachen University
 
    Copying and distribution of this script, with or without modification,
    are permitted in any medium without royalty provided the copyright
    notice and this notice are preserved.  */
 
-OUTPUT_FORMAT("elf64-littleaarch64-hermit")
-OUTPUT_ARCH("aarch64")
+OUTPUT_FORMAT("elf64-x86-64-hermit")
+OUTPUT_ARCH("i386:x86-64")
 ENTRY(_start)
 phys = 0x800000;
 cores = 512;

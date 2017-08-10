@@ -2,7 +2,7 @@ ARCH=aarch64
 MACHINE=
 NOP=0
 
-SCRIPT_NAME=elf
+SCRIPT_NAME=elf-hermit
 ELFSIZE=64
 OUTPUT_FORMAT="elf64-littleaarch64-hermit"
 BIG_OUTPUT_FORMAT="elf64-bigaarch64-hermit"
