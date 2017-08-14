@@ -3240,7 +3240,7 @@ eaarch64cloudabib.c: $(srcdir)/emulparams/aarch64cloudabib.sh $(srcdir)/emulpara
   $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
 
 eaarch64hermit.c: $(srcdir)/emulparams/aarch64hermit.sh \
-  $(ELF_DEPS) $(srcdir)/scripttempl/elf-hermit.sc ${GEN_DEPENDS}
+  $(ELF_DEPS) $(srcdir)/emultempl/aarch64elf.em $(srcdir)/scripttempl/elf-hermit.sc ${GEN_DEPENDS}
 
 eaarch64hermitb.c: $(srcdir)/emulparams/aarch64hermitb.sh \
   $(ELF_DEPS) $(srcdir)/scripttempl/elf-hermit.sc ${GEN_DEPENDS}
