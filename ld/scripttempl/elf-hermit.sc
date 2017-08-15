@@ -15,7 +15,7 @@ cat <<EOF
 OUTPUT_FORMAT("${OUTPUT_FORMAT}")
 OUTPUT_ARCH("${ARCH}")
 ENTRY(_start)
-phys = 0x800000;
+phys = ${TEXT_START_ADDR};
 cores = 512;
 
 SECTIONS
