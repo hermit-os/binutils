@@ -1,3 +1,7 @@
+binutils (2.26.1-2) unstable; urgency=low
+
+  * add missing .kbss.* section in HermitCore's linker script
+
 binutils (2.26.1-1) unstable; urgency=low
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
