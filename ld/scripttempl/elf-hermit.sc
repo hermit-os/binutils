@@ -145,7 +145,7 @@ SECTIONS
     tls_end = .;
   }
   .kbss : {
-    *(.kbss)
+    *(.kbss .kbss.*)
   }
   .bss : {
     __bss_start = .;
