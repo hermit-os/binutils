@@ -7,7 +7,7 @@ language: c
 compiler: gcc
 before_install:
 - sudo apt-get -qq update
-- sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev
+- sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev alien
   packaging-dev
 script:
 - rm -rf .git
@@ -17,6 +17,8 @@ script:
 - cd binutils-2.26.1
 - time debuild -us -uc -j2
 - md5sum ../*.deb
+- alien -r ../*.deb
+- mv *.rpm ..
 deploy:
   on: production
   provider: bintray
