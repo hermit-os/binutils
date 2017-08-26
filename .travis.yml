@@ -6,8 +6,8 @@ env:
   matrix:
   - OS_TYPE=centos OS_VERSION=6 OS_CLOUDPACKAGE=el
   - OS_TYPE=centos OS_VERSION=7 OS_CLOUDPACKAGE=el
-  #- OS_TYPE=ubuntu OS_VERSION=14.04
-  #- OS_TYPE=ubuntu OS_VERSION=16.04
+  - OS_TYPE=ubuntu OS_VERSION=14.04
+  - OS_TYPE=ubuntu OS_VERSION=16.04
 services:
   - docker
 language: c
@@ -22,7 +22,7 @@ before_install:
 script:
 - rm -rf .git
 # Run tests in Container
-- docker/setup_tests.sh ${OS_VERSION}
+- docker/setup_tests.sh ${OS_TYPE} ${OS_VERSION}
 #- cd ..
 #- mv binutils binutils-2.26.1
 #- tar -czf binutils_2.26.1.orig.tar.gz binutils-2.26.1

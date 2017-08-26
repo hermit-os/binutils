@@ -2,17 +2,20 @@
 
 # This script starts docker and systemd (if el7)
 
-# Version of CentOS/RHEL
-el_version=$1
+OS_NAME=$1
+OS_VERSION=$2
 
- # Run tests in Container
-if [ "$el_version" = "6" ]; then
+# do we run on CentOS?
+if [ "$OS_NAME" = "centos" ]; then
 
-sudo docker run --rm=true -v `pwd`:/HermitCore:rw centos:${OS_VERSION} /bin/bash -c "bash -xe /HermitCore/docker/tests_inside_docker.sh ${OS_VERSION}"
+# Run tests in Container
+if [ "$OS_VERSION" = "6" ]; then
 
-elif [ "$el_version" = "7" ]; then
+sudo docker run --rm=true -v `pwd`:/HermitCore:rw ${OS_TYPE}:${OS_VERSION} /bin/bash -c "bash -xe /HermitCore/docker/tests_inside_docker.sh ${OS_TYPE} ${OS_VERSION}"
 
-docker run --privileged -d -ti -e "container=docker"  -v /sys/fs/cgroup:/sys/fs/cgroup -v `pwd`:/HermitCore:rw  centos:${OS_VERSION}   /usr/sbin/init
+elif [ "$OS_VERSION" = "7" ]; then
+
+docker run --privileged -d -ti -e "container=docker"  -v /sys/fs/cgroup:/sys/fs/cgroup -v `pwd`:/HermitCore:rw  ${OS_TYPE}:${OS_VERSION}   /usr/sbin/init
 DOCKER_CONTAINER_ID=$(docker ps | grep centos | awk '{print $1}')
 docker logs $DOCKER_CONTAINER_ID
 docker exec -ti $DOCKER_CONTAINER_ID /bin/bash -xec "bash -xe /HermitCore/docker/tests_inside_docker.sh ${OS_VERSION};
@@ -20,5 +23,12 @@ docker exec -ti $DOCKER_CONTAINER_ID /bin/bash -xec "bash -xe /HermitCore/docker
 docker ps -a
 docker stop $DOCKER_CONTAINER_ID
 docker rm -v $DOCKER_CONTAINER_ID
+
+fi
+
+elif [ "$OS_NAME" = "ubuntu" ]; then
+# otherwise we run on Ubuntu
+
+docker run --rm=true -v $(pwd):/HermitCore:rw $os_name:$os_version /bin/bash -c "bash -xe /HermitCore/docker/tests_inside_docker.sh ${OS_TYPE} ${OS_VERSION}"
 
 fi
