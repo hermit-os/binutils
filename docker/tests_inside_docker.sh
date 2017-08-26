@@ -10,11 +10,11 @@ yum -y clean all
 yum -y clean expire-cache
 
 # First, install all the needed packages.
-yum install -y binutils gcc gcc-c++ texinfo kernel-headers rpm-build
+yum install -y binutils gcc gcc-c++ texinfo kernel-headers rpm-build kernel-devel
 
 elif [ "$OS_NAME" = "ubuntu" ]; then
 
 apt-get -qq update
-apt-get install -y binutils texinfo gcc g++ g++-multilib packaging-dev build-essential kernel-package
+apt-get install -y binutils texinfo gcc g++ packaging-dev build-essential kernel-package
 
 fi
