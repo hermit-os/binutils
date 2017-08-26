@@ -9,7 +9,6 @@ before_install:
 - sudo apt-get -qq update
 - sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev
   alien packaging-dev
-- gem install package_cloud
 script:
 - rm -rf .git
 - cd ..
