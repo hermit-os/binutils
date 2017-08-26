@@ -4,8 +4,8 @@ git:
   submodules: false
 env:
   matrix:
-  - OS_TYPE=centos OS_VERSION=6
-  - OS_TYPE=centos OS_VERSION=7
+  - OS_TYPE=centos OS_VERSION=6 OS_CLOUDPACKAGE=el
+  - OS_TYPE=centos OS_VERSION=7 OS_CLOUDPACKAGE=el
   #- OS_TYPE=ubuntu OS_VERSION=14.04
   #- OS_TYPE=ubuntu OS_VERSION=16.04
 services:
@@ -45,7 +45,7 @@ deploy:
       condition: -n "${PACKAGECLOUD_TOKEN}"
     repository: "stable"
     username: "hermitcore"
-    dist: "el/7"
+    dist: "${OS_CLOUDPACKAGE}/${OS_VERSION}"
     skip_cleanup: true
     package_glob: ../*.rpm
     token: "${PACKAGECLOUD_TOKEN}"
