@@ -6,8 +6,8 @@ env:
   matrix:
   - OS_TYPE=centos OS_VERSION=6 OS_CLOUDPACKAGE=el
   - OS_TYPE=centos OS_VERSION=7 OS_CLOUDPACKAGE=el
-  - OS_TYPE=ubuntu OS_VERSION=14.04
-  - OS_TYPE=ubuntu OS_VERSION=16.04
+  - OS_TYPE=ubuntu OS_VERSION=14.04 OS_CLOUDPACKAGE=ubuntu
+  - OS_TYPE=ubuntu OS_VERSION=16.04 OS_CLOUDPACKAGE=ubuntu
 services:
   - docker
 language: c
