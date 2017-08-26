@@ -29,6 +29,6 @@ fi
 elif [ "$OS_NAME" = "ubuntu" ]; then
 # otherwise we run on Ubuntu
 
-docker run --rm=true -v $(pwd):/HermitCore:rw $os_name:$os_version /bin/bash -c "bash -xe /HermitCore/docker/tests_inside_docker.sh ${OS_TYPE} ${OS_VERSION}"
+docker run --rm=true -v $(pwd):/HermitCore:rw ${OS_TYPE}:${OS_VERSION} /bin/bash -c "bash -xe /HermitCore/docker/tests_inside_docker.sh ${OS_TYPE} ${OS_VERSION}"
 
 fi
