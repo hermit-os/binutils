@@ -34,5 +34,5 @@ deploy:
     username: "rwth-os"
     dist: "centos/7"
     skip_cleanup: true
-    package_glob: build/*.{rpm,deb}
+    package_glob: *.{rpm,deb}
     token: "${PACKAGECLOUD_TOKEN}"
