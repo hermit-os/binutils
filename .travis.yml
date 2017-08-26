@@ -31,8 +31,8 @@ deploy:
     on:
       branch: production
       condition: -n "${PACKAGECLOUD_TOKEN}"
-    repository: "hermitcore"
-    username: "rwth-os"
+    repository: "stable"
+    username: "hermitcore"
     dist: "el/7"
     skip_cleanup: true
     package_glob: ../*.rpm
