@@ -1,24 +1,34 @@
 sudo: required
-dist: trusty
 git:
   depth: 3
   submodules: false
+env:
+  matrix:
+  - OS_TYPE=centos OS_VERSION=6
+  - OS_TYPE=centos OS_VERSION=7
+  - OS_TYPE=ubuntu OS_VERSION=14.04
+  - OS_TYPE=ubuntu OS_VERSION=16.04
+services:
+  - docker
 language: c
 compiler: gcc
 before_install:
 - sudo apt-get -qq update
-- sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev
-  alien packaging-dev
+- sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev packaging-dev
+- echo 'DOCKER_OPTS="-H tcp://127.0.0.1:2375 -H unix:///var/run/docker.sock -s devicemapper"' | sudo tee /etc/default/docker > /dev/null
+- sudo service docker restart
+- sleep 5
+- sudo docker pull ${OS_TYPE}:${OS_VERSION}
 script:
 - rm -rf .git
 - cd ..
 - mv binutils binutils-2.26.1
 - tar -czf binutils_2.26.1.orig.tar.gz binutils-2.26.1
 - cd binutils-2.26.1
-- time debuild -us -uc -j2
-- md5sum ../*.deb
-- sudo alien -r ../*.deb
-- sudo mv *.rpm ..
+#- time debuild -us -uc -j2
+#- md5sum ../*.deb
+#- sudo alien -r ../*.deb
+#- sudo mv *.rpm ..
 deploy:
   - provider: bintray
     on: production
