@@ -33,7 +33,7 @@ deploy:
       condition: -n "${PACKAGECLOUD_TOKEN}"
     repository: "hermitcore"
     username: "rwth-os"
-    dist: "centos/7"
+    dist: "el/7"
     skip_cleanup: true
     package_glob: ../*.rpm
     token: "${PACKAGECLOUD_TOKEN}"
