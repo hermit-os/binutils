@@ -20,7 +20,6 @@ script:
 - sudo alien -r ../*.deb
 - sudo mv *.rpm ..
 deploy:
-  matrix:
   - provider: bintray
     on: production
     file: ".bintray_descriptor.json"
