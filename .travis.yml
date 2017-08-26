@@ -27,9 +27,11 @@ deploy:
     key:
       secure: glmIr26BV2ntaRauAoOp1yv8xuGzg2zrBEDyYbGSMIi30PLWolxRvR+r3tszzePHU3nhWOzIsJg2rSnanHNRPc7pRgL07cPZ80Pzuzu2AQMJleScnX158xKMnNcieimdi/Uy1oCpI9Iz96Amcf7r2x9Jk9R4/hrNCUeFu8z0VkTvx3a12aKt2/IFRgwp8MoVLRmIWUHu61q+nD+LroIo4/4if00Mn3KQ0cnY5qPZR3Nw+xQ4bsWgpNwYd6r8R7cVOtMFujCrpLSJ65ogoYxgvaI0OENgL44ETXPhj0jDK5fQ6rCm+0NEq29Z9lSkJKqw1eK7op4xijYZWG7qGe80x74H4j+0V4nLuzmHV2+vBJt/bRccN+FZfPhnWJ48RmGW74XcbewMq8JjRyuBaNrIJi3qHRJ/+BrcbS76jG+AuJn9N7jkRdWNomAtjt2YKqfsjFgNa6BuMwoavhqqolfIJs+v1eHEvAXwX1aiPF/FJdkvcQpeWewgCK2rOsX5nCNLW1pWnT0nr8zqfe4+hJUscRRA3JJTmjHFzGbw1jIjHRaV3eGT8xy0zLlmw+0fYzaK0jS5BlxG9kQkFxLb0enq8YG4QcQNSRXbwMr70sL50OHZXJ8aQt+ccFQH0OS9UDkVPQ+630T/xLyX7iL9gqG2A/7GfzsZHPQ2bvzYd79M5AY=
   - provider: packagecloud
-    on: production
-    repository: hermitcore
-    username: rwth-os
-    dist: centos/7
-    token:
-      secure: QxK4EswWkrdrAaxb08Bb/3P0DI3T6Bsbi/zBXiqQLBpuUsF44furyWBcqNvAcp/rahG0+2jWg9Z5oPhxtDqTsj2oSGUxqzN0AihXmr8bLxC8QwOUd7jh9oxV5K2t7wL1VlbwanNBfC5Y48WQBURxSdV3eL6p+u9aCklZ8qpJt5ziPCs7z75Zh24Zxih0bFpa8BRmFgompk8NbJYcX+CWqMMw+oib5TNU5PfijWT4CBdXtlR4NjOm1Uzz4ve6tRpcjhAr1iHGU394I4k0H7asqVzrG+ZVaZg/TqrrBPgdz3t3Lx+ChhoXTUyNAzwZDAe+4CnpwXyK8tyqvduKXI9uCMuQ4MMcpGnC4PI9pVlQZBd8oa7h7I9vjhSWB3S9LX4xsGdWGODqhK3wD1VosSdd/QVJpe9V/YKSoFFczlTY9hmI4qKmFz+XelHOUDcSwDWiQUtkbdw7M9cfo2R2gUAr6MJqUL34b2y0sO5QguxhuJcsv/ESeDXhbkODVI3OrGCfH3CDdZkhfA95PGcQrozWujvqMXXwNLUh1fnwC9/4bJYaQkXSb8csMHFGPFqKtNV43O6pzf4vryMIkNQZVyYe4oUrGjvwkWdo6HL6Df8L16W8vWH4Zw1CtgxLb3K7cJ8jhehCCQGms3kQYIKofIGFkyBdcNBkfeCWGKQ/zpeRRu8=
+    on:
+      branch: production
+      condition: -n "${PACKAGECLOUD_TOKEN}"
+    repository: "hermitcore"
+    username: "rwth-os"
+    dist: "centos/7"
+    skip_cleanup: true
+    token: "${PACKAGECLOUD_TOKEN}"
