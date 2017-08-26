@@ -9,6 +9,7 @@ before_install:
 - sudo apt-get -qq update
 - sudo apt-get install -y nasm texinfo libmpfr-dev libmpc-dev libgmp-dev libisl-dev
   alien packaging-dev
+- gem install package_cloud
 script:
 - rm -rf .git
 - cd ..
@@ -18,7 +19,6 @@ script:
 - time debuild -us -uc -j2
 - md5sum ../*.deb
 - sudo alien -r ../*.deb
-- sudo mv *.rpm ..
 deploy:
   - provider: bintray
     on: production
@@ -33,4 +33,4 @@ deploy:
     username: rwth-os
     dist: centos/7
     token:
-      secure: K8twOY9LSP94errqBTtoclPZps5a4iDEvayjDwOLL8e8f11a4ApCKl4Rhr/2y0qShI7nY8zXfhwzTPwIkZyjEfQFvNf7IflDRggfOM0cO+kizlccPkvBTJ0WPAVRmzAfhuUrclQGcKjaJww0o5WXNuVf0ds7mSIkxO5N0PadL+msK/yzedelUJtzippe2BbXT2/q8IbJvQEmIGWeTUvPD9SX/26Snjx2zkrgHzp5kI0LMTVXOQQ3kQm6CxLohVULe1SoJRKTLSxKjOENCNJbqNYXC3Kq5kOkZjE7CEUABRuMaS2em9mw+qauk8AwatBzr3zE2x5N2RL9wp1OZwLViF/O2wEsUm0Ly1fLXL6HaHcbdFDQltckE2DuIA1YQ9LBm4xj/m+7omhHUIjIe2ElfJQdPaPxjPsZRZt8cIbGtS5UAjX6skZelxtiVliyOhTmJL/geMUuubZFTFdIzTkLBe4bfO84vsOTDOVQJ7pcxzmTrV8CXCpLI39lB3Yv5cffTJvj/51rdV9FZ1LzdNxIPOtwXve5CLrUldSacjgmhhgLpx78/9W9kyR/FjYgOnDixuisNQC1NSvvv6QXckSFPRJf25CJ+TW12vPuy5/Bs/5mWMJ/Yf9d/MX+Rh299KL0z2/N7s7q/20hHXywhe5W6wMjE7KDXTwCx55MOBNDsz8=
+      secure: QxK4EswWkrdrAaxb08Bb/3P0DI3T6Bsbi/zBXiqQLBpuUsF44furyWBcqNvAcp/rahG0+2jWg9Z5oPhxtDqTsj2oSGUxqzN0AihXmr8bLxC8QwOUd7jh9oxV5K2t7wL1VlbwanNBfC5Y48WQBURxSdV3eL6p+u9aCklZ8qpJt5ziPCs7z75Zh24Zxih0bFpa8BRmFgompk8NbJYcX+CWqMMw+oib5TNU5PfijWT4CBdXtlR4NjOm1Uzz4ve6tRpcjhAr1iHGU394I4k0H7asqVzrG+ZVaZg/TqrrBPgdz3t3Lx+ChhoXTUyNAzwZDAe+4CnpwXyK8tyqvduKXI9uCMuQ4MMcpGnC4PI9pVlQZBd8oa7h7I9vjhSWB3S9LX4xsGdWGODqhK3wD1VosSdd/QVJpe9V/YKSoFFczlTY9hmI4qKmFz+XelHOUDcSwDWiQUtkbdw7M9cfo2R2gUAr6MJqUL34b2y0sO5QguxhuJcsv/ESeDXhbkODVI3OrGCfH3CDdZkhfA95PGcQrozWujvqMXXwNLUh1fnwC9/4bJYaQkXSb8csMHFGPFqKtNV43O6pzf4vryMIkNQZVyYe4oUrGjvwkWdo6HL6Df8L16W8vWH4Zw1CtgxLb3K7cJ8jhehCCQGms3kQYIKofIGFkyBdcNBkfeCWGKQ/zpeRRu8=
