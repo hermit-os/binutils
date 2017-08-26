@@ -14,7 +14,7 @@ yum install -y binutils gcc gcc-c++ texinfo kernel-headers rpm-build
 
 elif [ "$OS_NAME" = "ubuntu" ]; then
 
-sudo apt-get -qq update
-sudo apt-get install -y binutils texinfo gcc g++ g++-multilib packaging-dev build-essential kernel-package
+apt-get -qq update
+apt-get install -y binutils texinfo gcc g++ g++-multilib packaging-dev build-essential kernel-package
 
 fi
