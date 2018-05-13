@@ -5,7 +5,7 @@
 export DH_VERBOSE=1
 
 %:
-	dh $@  --builddirectory=build --parallel
+	dh $@  --without autotools_dev --builddirectory=build --parallel
 
 override_dh_auto_configure:
 	mkdir -p build; cd build; ../configure --target=x86_64-hermit --prefix=/opt/hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib
