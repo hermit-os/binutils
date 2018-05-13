@@ -18,11 +18,11 @@ before_install:
 script:
 - rm -rf .git
 - cd ..
-- mv binutils binutils-2.26.1
-- tar -czf binutils_2.26.1.orig.tar.gz binutils-2.26.1
-- cd binutils-2.26.1
+- mv binutils binutils-2.30.1
+- tar -czf binutils_2.30.1.orig.tar.gz binutils-2.30.1
+- cd binutils-2.30.1
 # Run tests in Container
-- docker run -ti -v ${TRAVIS_BUILD_DIR}/..:/work:rw ${OS_TYPE}:${OS_VERSION} /bin/bash -c "cd /work/binutils-2.26.1; ./tests.sh ${OS_TYPE} ${OS_VERSION}"
+- docker run -ti -v ${TRAVIS_BUILD_DIR}/..:/work:rw ${OS_TYPE}:${OS_VERSION} /bin/bash -c "cd /work/binutils-2.30.1; ./tests.sh ${OS_TYPE} ${OS_VERSION}"
 deploy:
   - provider: bintray
     on: production
