@@ -13,6 +13,9 @@ services:
   - docker
 language: c
 compiler: gcc
+addons:
+    apt:
+        update: true
 before_install:
 - sudo docker pull ${OS_TYPE}:${OS_VERSION}
 script:
