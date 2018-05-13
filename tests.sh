@@ -24,7 +24,7 @@ elif [ "$OS_NAME" = "ubuntu" ]; then
 export DEBIAN_FRONTEND="noninteractive"
 
 apt-get -qq update
-apt-get install -y dialog apt-utils flex bison binutils texinfo gcc g++ packaging-dev build-essential libtool autotools-dev autoconf pkg-config
+apt-get install -y gawk dialog apt-utils flex bison binutils texinfo gcc g++ packaging-dev build-essential libtool autotools-dev autoconf pkg-config
 
 time debuild -us -uc -j2
 echo $?
