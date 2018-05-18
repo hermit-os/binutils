@@ -650,6 +650,7 @@ extra_linker_plugin_flags
 extra_linker_plugin_configure_flags
 islinc
 isllibs
+islver
 poststage1_ldflags
 poststage1_libs
 stage1_ldflags
@@ -753,6 +754,7 @@ enable_as_accelerator_for
 enable_offload_targets
 enable_gold
 enable_ld
+enable_compressed_debug_sections
 enable_libquadmath
 enable_libquadmath_support
 enable_libada
@@ -772,7 +774,6 @@ with_gmp_dir
 with_gmp
 with_gmp_include
 with_gmp_lib
-with_host_libstdcxx
 with_stage1_libs
 with_stage1_ldflags
 with_boot_libs
@@ -1477,6 +1478,9 @@ Optional Features:
                           offload target compiler during the build
   --enable-gold[=ARG]     build gold [ARG={default,yes,no}]
   --enable-ld[=ARG]       build ld [ARG={default,yes,no}]
+  --enable-compressed-debug-sections={all,gas,gold,ld,none}
+                          Enable compressed debug sections for gas, gold or ld
+                          by default
   --disable-libquadmath   do not build libquadmath directory
   --disable-libquadmath-support
                           disable libquadmath support for Fortran
@@ -1489,7 +1493,7 @@ Optional Features:
                           build static libjava [default=no]
   --enable-bootstrap      enable bootstrapping [yes if native build]
   --disable-isl-version-check
-                          disable check for ISL version
+                          disable check for isl version
   --enable-lto            enable link time optimization support
   --enable-linker-plugin-configure-flags=FLAGS
                           additional flags for configuring linker plugins
@@ -1540,20 +1544,18 @@ Optional Packages:
                           --with-gmp-lib=PATH/lib
   --with-gmp-include=PATH specify directory for installed GMP include files
   --with-gmp-lib=PATH     specify directory for the installed GMP library
-  --with-host-libstdcxx=L use linker arguments L to link with libstdc++ when
-                          linking with PPL
   --with-stage1-libs=LIBS libraries for stage1
   --with-stage1-ldflags=FLAGS
                           linker flags for stage1
   --with-boot-libs=LIBS   libraries for stage2 and later
   --with-boot-ldflags=FLAGS
                           linker flags for stage2 and later
-  --with-isl=PATH         Specify prefix directory for the installed ISL
+  --with-isl=PATH         Specify prefix directory for the installed isl
                           package. Equivalent to
                           --with-isl-include=PATH/include plus
                           --with-isl-lib=PATH/lib
-  --with-isl-include=PATH Specify directory for installed ISL include files
-  --with-isl-lib=PATH     Specify the directory for the installed ISL library
+  --with-isl-include=PATH Specify directory for installed isl include files
+  --with-isl-lib=PATH     Specify the directory for the installed isl library
   --with-build-sysroot=SYSROOT
                           use sysroot as the system root during the build
   --with-debug-prefix-map='A=B C=D ...'
@@ -2971,7 +2973,7 @@ case "${ENABLE_GOLD}" in
       # Check for target supported by gold.
       case "${target}" in
         i?86-*-* | x86_64-*-* | sparc*-*-* | powerpc*-*-* | arm*-*-* \
-        | aarch64*-*-* | tilegx*-*-*)
+        | aarch64*-*-* | tilegx*-*-* | mips*-*-* | s390*-*-*)
 	  configdirs="$configdirs gold"
 	  if test x${ENABLE_GOLD} = xdefault; then
 	    default_ld=gold
@@ -3015,6 +3017,21 @@ $as_echo "$as_me: WARNING: neither ld nor gold are enabled" >&2;}
     as_fn_error "invalid --enable-ld argument" "$LINENO" 5
     ;;
 esac
+
+# PR gas/19109
+# Decide the default method for compressing debug sections.
+# Provide a configure time option to override our default.
+# Check whether --enable-compressed_debug_sections was given.
+if test "${enable_compressed_debug_sections+set}" = set; then :
+  enableval=$enable_compressed_debug_sections;
+  if test x"$enable_compressed_debug_sections" = xyes; then
+    as_fn_error "no program with compressed debug sections specified" "$LINENO" 5
+  fi
+
+else
+  enable_compressed_debug_sections=
+fi
+
 
 # Configure extra directories which are host specific
 
@@ -3168,9 +3185,8 @@ if test x$enable_static_libjava != xyes ; then
 fi
 
 
-# Disable libgomp on non POSIX hosted systems.
+# Enable libgomp by default on hosted POSIX systems, and a few others.
 if test x$enable_libgomp = x ; then
-    # Enable libgomp by default on hosted POSIX systems.
     case "${target}" in
     *-*-linux* | *-*-gnu* | *-*-k*bsd*-gnu | *-*-kopensolaris*-gnu)
 	;;
@@ -3179,6 +3195,8 @@ if test x$enable_libgomp = x ; then
     *-*-solaris2* | *-*-hpux11*)
 	;;
     *-*-darwin* | *-*-aix*)
+	;;
+    nvptx*-*-*)
 	;;
     *)
 	noconfigdirs="$noconfigdirs target-libgomp"
@@ -3303,7 +3321,7 @@ fi
 
 # Enable libmpx on supported systems by request.
 if test -d ${srcdir}/libmpx; then
-    if test x$enable_libmpx = xyes; then
+    if test x$enable_libmpx = x; then
        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for libmpx support" >&5
 $as_echo_n "checking for libmpx support... " >&6; }
        if (srcdir=${srcdir}/libmpx; \
@@ -3317,8 +3335,6 @@ $as_echo "no" >&6; }
            { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
        fi
-    else
-       noconfigdirs="$noconfigdirs target-libmpx"
     fi
 fi
 
@@ -3671,6 +3687,14 @@ esac
 case "${target}" in
   *-*-chorusos)
     ;;
+  aarch64-*-darwin*)
+    noconfigdirs="$noconfigdirs ld gas gdb gprof"
+    noconfigdirs="$noconfigdirs sim target-rda"
+    ;;
+  arm-*-darwin*)
+    noconfigdirs="$noconfigdirs ld gas gdb gprof"
+    noconfigdirs="$noconfigdirs sim target-rda"
+    ;;
   powerpc-*-darwin*)
     noconfigdirs="$noconfigdirs ld gas gdb gprof"
     noconfigdirs="$noconfigdirs sim target-rda"
@@ -3917,7 +3941,6 @@ case "${target}" in
     noconfigdirs="$noconfigdirs gdb"
     ;;
   nvptx*-*-*)
-    # nvptx is just a compiler
     noconfigdirs="$noconfigdirs target-libssp target-libstdc++-v3 target-libobjc"
     ;;
   or1k*-*-*)
@@ -3939,8 +3962,11 @@ case "${target}" in
   tic6x-*-*)
     noconfigdirs="$noconfigdirs sim"
     ;;
-  tilepro*-*-* | tilegx*-*-*)
+  tilegx*-*-*)
     noconfigdirs="$noconfigdirs sim"
+    ;;
+  tilepro*-*-*)
+    noconfigdirs="$noconfigdirs gdb sim"
     ;;
   v810-*-*)
     noconfigdirs="$noconfigdirs bfd binutils gas gdb ld opcodes target-libgloss"
@@ -5849,20 +5875,6 @@ fi
 
 
 
-# Allow host libstdc++ to be specified for static linking with PPL.
-
-# Check whether --with-host-libstdcxx was given.
-if test "${with_host_libstdcxx+set}" = set; then :
-  withval=$with_host_libstdcxx;
-fi
-
-
-case $with_host_libstdcxx in
-  no|yes)
-    as_fn_error "-with-host-libstdcxx needs an argument" "$LINENO" 5
-    ;;
-esac
-
 # Libraries to use for stage1 or when not bootstrapping.
 
 # Check whether --with-stage1-libs was given.
@@ -5873,7 +5885,7 @@ if test "${with_stage1_libs+set}" = set; then :
    stage1_libs=$withval
  fi
 else
-  stage1_libs=$with_host_libstdcxx
+  stage1_libs=
 fi
 
 
@@ -5899,8 +5911,7 @@ fi
 
 
 
-# Libraries to use for stage2 and later builds.  This defaults to the
-# argument passed to --with-host-libstdcxx.
+# Libraries to use for stage2 and later builds.
 
 # Check whether --with-boot-libs was given.
 if test "${with_boot_libs+set}" = set; then :
@@ -5910,7 +5921,7 @@ if test "${with_boot_libs+set}" = set; then :
    poststage1_libs=$withval
  fi
 else
-  poststage1_libs=$with_host_libstdcxx
+  poststage1_libs=
 fi
 
 
@@ -5936,7 +5947,7 @@ fi
 
 
 
-# GCC GRAPHITE dependency ISL.
+# GCC GRAPHITE dependency isl.
 # Basic setup is inlined here, actual checks are in config/isl.m4
 
 
@@ -5949,7 +5960,7 @@ fi
 # Treat --without-isl as a request to disable
 # GRAPHITE support and skip all following checks.
 if test "x$with_isl" != "xno"; then
-  # Check for ISL
+  # Check for isl
 
 
 # Check whether --with-isl-include was given.
@@ -5996,8 +6007,8 @@ fi
     isllibs='-L$$r/$(HOST_SUBDIR)/isl/'"$lt_cv_objdir"' '
     islinc='-I$$r/$(HOST_SUBDIR)/isl/include -I$$s/isl/include'
     ENABLE_ISL_CHECK=no
-    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using in-tree ISL, disabling version check" >&5
-$as_echo "$as_me: WARNING: using in-tree ISL, disabling version check" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using in-tree isl, disabling version check" >&5
+$as_echo "$as_me: WARNING: using in-tree isl, disabling version check" >&2;}
   fi
 
   isllibs="${isllibs} -lisl"
@@ -6010,18 +6021,18 @@ $as_echo "$as_me: WARNING: using in-tree ISL, disabling version check" >&2;}
     _isl_saved_LIBS=$LIBS
 
     CFLAGS="${_isl_saved_CFLAGS} ${islinc} ${gmpinc}"
-    LDFLAGS="${_isl_saved_LDFLAGS} ${isllibs}"
-    LIBS="${_isl_saved_LIBS} -lisl"
+    LDFLAGS="${_isl_saved_LDFLAGS} ${isllibs} ${gmplibs}"
+    LIBS="${_isl_saved_LIBS} -lisl -lgmp"
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for compatible ISL" >&5
-$as_echo_n "checking for compatible ISL... " >&6; }
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for isl 0.16, 0.15, or deprecated 0.14" >&5
+$as_echo_n "checking for isl 0.16, 0.15, or deprecated 0.14... " >&6; }
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#include <isl/val.h>
+#include <isl/ctx.h>
 int
 main ()
 {
-;
+isl_ctx_get_max_operations (isl_ctx_alloc ());
   ;
   return 0;
 }
@@ -6035,6 +6046,39 @@ rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $gcc_cv_isl" >&5
 $as_echo "$gcc_cv_isl" >&6; }
+
+    if test "${gcc_cv_isl}" = no ; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: recommended isl version is 0.16 or 0.15, the minimum required isl version 0.14 is deprecated" >&5
+$as_echo "recommended isl version is 0.16 or 0.15, the minimum required isl version 0.14 is deprecated" >&6; }
+    fi
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for isl 0.16 or 0.15" >&5
+$as_echo_n "checking for isl 0.16 or 0.15... " >&6; }
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <isl/schedule.h>
+int
+main ()
+{
+isl_options_set_schedule_serialize_sccs (NULL, 0);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_has_isl_options_set_schedule_serialize_sccs=yes
+else
+  ac_has_isl_options_set_schedule_serialize_sccs=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_has_isl_options_set_schedule_serialize_sccs" >&5
+$as_echo "$ac_has_isl_options_set_schedule_serialize_sccs" >&6; }
+
+    if test x"$ac_has_isl_options_set_schedule_serialize_sccs" = x"yes"; then
+      islver="0.15"
+
+    fi
 
     CFLAGS=$_isl_saved_CFLAGS
     LDFLAGS=$_isl_saved_LDFLAGS
@@ -6067,13 +6111,13 @@ $as_echo "$gcc_cv_isl" >&6; }
     && test "x${isllibs}" = x \
     && test "x${islinc}" = x ; then
 
-    as_fn_error "Unable to find a usable ISL.  See config.log for details." "$LINENO" 5
+    as_fn_error "Unable to find a usable isl.  See config.log for details." "$LINENO" 5
   fi
 
 
 fi
 
-# If the ISL check failed, disable builds of in-tree variant of ISL
+# If the isl check failed, disable builds of in-tree variant of isl
 if test "x$with_isl" = xno ||
    test "x$gcc_cv_isl" = xno; then
   noconfigdirs="$noconfigdirs isl"
@@ -6115,7 +6159,7 @@ if test $target_elf = yes; then :
 else
   if test x"$default_enable_lto" = x"yes" ; then
     case $target in
-      *-apple-darwin9* | *-cygwin* | *-mingw*) ;;
+      *-apple-darwin9* | *-cygwin* | *-mingw* | *djgpp*) ;;
       # On other non-ELF platforms, LTO has yet to be validated.
       *) enable_lto=no ;;
     esac
@@ -6126,7 +6170,7 @@ else
   # warn during gcc/ subconfigure; unless you're bootstrapping with
   # -flto it won't be needed until after installation anyway.
     case $target in
-      *-cygwin* | *-mingw* | *-apple-darwin*) ;;
+      *-cygwin* | *-mingw* | *-apple-darwin* | *djgpp*) ;;
       *) if test x"$enable_lto" = x"yes"; then
 	as_fn_error "LTO support is not enabled for this target." "$LINENO" 5
         fi

@@ -1,6 +1,6 @@
 /* Go language support routines for GDB, the GNU debugger.
 
-   Copyright (C) 2012-2015 Free Software Foundation, Inc.
+   Copyright (C) 2012-2016 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -195,9 +195,9 @@ unpack_mangled_go_symbol (const char *mangled_name,
   /* Pointer to "N" if valid "N<digit(s)>_" found.  */
   char *method_type;
   /* Pointer to the first '.'.  */
-  char *first_dot;
+  const char *first_dot;
   /* Pointer to the last '.'.  */
-  char *last_dot;
+  const char *last_dot;
   /* Non-zero if we saw a pointer indicator.  */
   int saw_pointer;
 
@@ -379,10 +379,19 @@ go_demangle (const char *mangled_name, int options)
     }
   obstack_grow_str0 (&tempbuf, "");
 
-  result = xstrdup (obstack_finish (&tempbuf));
+  result = xstrdup ((const char *) obstack_finish (&tempbuf));
   obstack_free (&tempbuf, NULL);
   xfree (name_buf);
   return result;
+}
+
+/* la_sniff_from_mangled_name for Go.  */
+
+static int
+go_sniff_from_mangled_name (const char *mangled, char **demangled)
+{
+  *demangled = go_demangle (mangled, 0);
+  return *demangled != NULL;
 }
 
 /* Given a Go symbol, return its package or NULL if unknown.
@@ -565,9 +574,10 @@ static const struct language_defn go_language_defn =
   case_sensitive_on,
   array_row_major,
   macro_expansion_no,
+  NULL,
   &exp_descriptor_c,
   go_parse,
-  go_error,
+  go_yyerror,
   null_post_parser,
   c_printchar,			/* Print a character constant.  */
   c_printstr,			/* Function to print string constant.  */
@@ -583,6 +593,7 @@ static const struct language_defn go_language_defn =
   basic_lookup_symbol_nonlocal, 
   basic_lookup_transparent_type,
   go_demangle,			/* Language specific symbol demangler.  */
+  go_sniff_from_mangled_name,
   NULL,				/* Language specific
 				   class_name_from_physname.  */
   go_op_print_tab,		/* Expression operators for printing.  */
@@ -655,7 +666,7 @@ static struct gdbarch_data *go_type_data;
 const struct builtin_go_type *
 builtin_go_type (struct gdbarch *gdbarch)
 {
-  return gdbarch_data (gdbarch, go_type_data);
+  return (const struct builtin_go_type *) gdbarch_data (gdbarch, go_type_data);
 }
 
 extern initialize_file_ftype _initialize_go_language;

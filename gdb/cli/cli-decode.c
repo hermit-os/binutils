@@ -1,6 +1,6 @@
 /* Handle lists of commands, their decoding and documentation, for GDB.
 
-   Copyright (C) 1986-2015 Free Software Foundation, Inc.
+   Copyright (C) 1986-2016 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -192,8 +192,7 @@ struct cmd_list_element *
 add_cmd (const char *name, enum command_class theclass, cmd_cfunc_ftype *fun,
 	 const char *doc, struct cmd_list_element **list)
 {
-  struct cmd_list_element *c
-    = (struct cmd_list_element *) xmalloc (sizeof (struct cmd_list_element));
+  struct cmd_list_element *c = XNEW (struct cmd_list_element);
   struct cmd_list_element *p, *iter;
 
   /* Turn each alias of the old command into an alias of the new
@@ -856,7 +855,7 @@ delete_cmd (const char *name, struct cmd_list_element **list,
 struct cmd_list_element *
 add_info (const char *name, cmd_cfunc_ftype *fun, const char *doc)
 {
-  return add_cmd (name, no_class, fun, doc, &infolist);
+  return add_cmd (name, class_info, fun, doc, &infolist);
 }
 
 /* Add an alias to the list of info subcommands.  */
@@ -1176,7 +1175,7 @@ print_help_for_command (struct cmd_list_element *c, const char *prefix,
  * all sublists of LIST.
  * PREFIX is the prefix to print before each command name.
  * STREAM is the stream upon which the output should be written.
- * CLASS should be:
+ * THECLASS should be:
  *      A non-negative class number to list only commands in that
  * class.
  *      ALL_COMMANDS to list all commands in list.
@@ -1193,15 +1192,18 @@ help_cmd_list (struct cmd_list_element *list, enum command_class theclass,
   struct cmd_list_element *c;
 
   for (c = list; c; c = c->next)
-    {      
+    {
       if (c->abbrev_flag == 0
+	  && !c->cmd_deprecated
 	  && (theclass == all_commands
 	      || (theclass == all_classes && c->func == NULL)
 	      || (theclass == c->theclass && c->func != NULL)))
 	{
 	  print_help_for_command (c, prefix, recurse, stream);
 	}
-      else if (c->abbrev_flag == 0 && recurse
+      else if (c->abbrev_flag == 0
+	       && recurse
+	       && !c->cmd_deprecated
 	       && theclass == class_user && c->prefixlist != NULL)
 	/* User-defined commands may be subcommands.  */
 	help_cmd_list (*c->prefixlist, theclass, c->prefixname,
@@ -1220,7 +1222,7 @@ find_cmd (const char *command, int len, struct cmd_list_element *clist,
 {
   struct cmd_list_element *found, *c;
 
-  found = (struct cmd_list_element *) NULL;
+  found = NULL;
   *nfound = 0;
   for (c = clist; c; c = c->next)
     if (!strncmp (command, c->name, len)

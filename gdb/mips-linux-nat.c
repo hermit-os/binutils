@@ -1,6 +1,6 @@
 /* Native-dependent code for GNU/Linux on MIPS processors.
 
-   Copyright (C) 2001-2015 Free Software Foundation, Inc.
+   Copyright (C) 2001-2016 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -673,8 +673,7 @@ mips_linux_insert_watchpoint (struct target_ops *self,
     return -1;
 
   /* It fit.  Stick it on the end of the list.  */
-  new_watch = (struct mips_watchpoint *)
-    xmalloc (sizeof (struct mips_watchpoint));
+  new_watch = XNEW (struct mips_watchpoint);
   new_watch->addr = addr;
   new_watch->len = len;
   new_watch->type = type;

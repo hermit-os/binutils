@@ -1,6 +1,6 @@
 /* Support for printing D values for GDB, the GNU debugger.
 
-   Copyright (C) 2008-2015 Free Software Foundation, Inc.
+   Copyright (C) 2008-2016 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -29,7 +29,7 @@
 
 static int
 dynamic_array_type (struct type *type, const gdb_byte *valaddr,
-		    int embedded_offset, CORE_ADDR address,
+		    LONGEST embedded_offset, CORE_ADDR address,
 		    struct ui_file *stream, int recurse,
 		    const struct value *val,
 		    const struct value_print_options *options)

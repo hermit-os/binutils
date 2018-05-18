@@ -16,6 +16,8 @@ ${LIB_SEARCH_DIRS}
 
 MEMORY
 {
+  /* Note - we cannot use "PROVIDE(len)" ... "LENGTH = len" as
+     PROVIDE statements are not evaluated inside MEMORY blocks.  */
   flash     (rx)   : ORIGIN = 0, LENGTH = 256K
   ram       (rw!x) : ORIGIN = 0x800000, LENGTH = 64K
 }
@@ -32,14 +34,14 @@ SECTIONS
     . = ALIGN(4);
   } ${RELOCATING+ > flash}
   ${CONSTRUCTING+${TORS}}
-  .data	  : AT (ADDR (.text) + SIZEOF (.text))
+  .data	: ${RELOCATING+ AT (ADDR (.text) + SIZEOF (.text))}
   {
     *(.data)
     *(.rodata)
     *(.rodata*)
     ${RELOCATING+ _edata = . ; }
   } ${RELOCATING+ > ram}
-  .bss  SIZEOF(.data) + ADDR(.data) :
+  .bss  ${RELOCATING+ SIZEOF(.data) + ADDR(.data)} :
   {
     ${RELOCATING+ _bss_start = . ; }
     *(.bss)
@@ -58,5 +60,10 @@ SECTIONS
   {
     *(.stabstr)
   }
+EOF
+
+. $srcdir/scripttempl/DWARF.sc
+
+cat <<EOF
 }
 EOF

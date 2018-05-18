@@ -1,5 +1,5 @@
 /* GNU/Linux on ARM native support.
-   Copyright (C) 1999-2015 Free Software Foundation, Inc.
+   Copyright (C) 1999-2016 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -66,23 +66,6 @@
 
 extern int arm_apcs_32;
 
-/* On GNU/Linux, threads are implemented as pseudo-processes, in which
-   case we may be tracing more than one process at a time.  In that
-   case, inferior_ptid will contain the main process ID and the
-   individual thread (process) ID.  get_thread_id () is used to get
-   the thread id if it's available, and the process id otherwise.  */
-
-static int
-get_thread_id (ptid_t ptid)
-{
-  int tid = ptid_get_lwp (ptid);
-  if (0 == tid)
-    tid = ptid_get_pid (ptid);
-  return tid;
-}
-
-#define GET_THREAD_ID(PTID)	get_thread_id (PTID)
-
 /* Get the whole floating point state of the process and store it
    into regcache.  */
 
@@ -93,7 +76,7 @@ fetch_fpregs (struct regcache *regcache)
   gdb_byte fp[ARM_LINUX_SIZEOF_NWFPE];
 
   /* Get the thread id for the ptrace call.  */
-  tid = GET_THREAD_ID (inferior_ptid);
+  tid = ptid_get_lwp (inferior_ptid);
 
   /* Read the floating point state.  */
   if (have_ptrace_getregset == TRIBOOL_TRUE)
@@ -109,10 +92,7 @@ fetch_fpregs (struct regcache *regcache)
     ret = ptrace (PT_GETFPREGS, tid, 0, fp);
 
   if (ret < 0)
-    {
-      warning (_("Unable to fetch the floating point registers."));
-      return;
-    }
+    perror_with_name (_("Unable to fetch the floating point registers."));
 
   /* Fetch fpsr.  */
   regcache_raw_supply (regcache, ARM_FPS_REGNUM,
@@ -133,7 +113,7 @@ store_fpregs (const struct regcache *regcache)
   gdb_byte fp[ARM_LINUX_SIZEOF_NWFPE];
 
   /* Get the thread id for the ptrace call.  */
-  tid = GET_THREAD_ID (inferior_ptid);
+  tid = ptid_get_lwp (inferior_ptid);
 
   /* Read the floating point state.  */
   if (have_ptrace_getregset == TRIBOOL_TRUE)
@@ -150,10 +130,7 @@ store_fpregs (const struct regcache *regcache)
     ret = ptrace (PT_GETFPREGS, tid, 0, fp);
 
   if (ret < 0)
-    {
-      warning (_("Unable to fetch the floating point registers."));
-      return;
-    }
+    perror_with_name (_("Unable to fetch the floating point registers."));
 
   /* Store fpsr.  */
   if (REG_VALID == regcache_register_status (regcache, ARM_FPS_REGNUM))
@@ -177,10 +154,7 @@ store_fpregs (const struct regcache *regcache)
     ret = ptrace (PTRACE_SETFPREGS, tid, 0, fp);
 
   if (ret < 0)
-    {
-      warning (_("Unable to store floating point registers."));
-      return;
-    }
+    perror_with_name (_("Unable to store floating point registers."));
 }
 
 /* Fetch all general registers of the process and store into
@@ -193,7 +167,7 @@ fetch_regs (struct regcache *regcache)
   elf_gregset_t regs;
 
   /* Get the thread id for the ptrace call.  */
-  tid = GET_THREAD_ID (inferior_ptid);
+  tid = ptid_get_lwp (inferior_ptid);
 
   if (have_ptrace_getregset == TRIBOOL_TRUE)
     {
@@ -208,10 +182,7 @@ fetch_regs (struct regcache *regcache)
     ret = ptrace (PTRACE_GETREGS, tid, 0, &regs);
 
   if (ret < 0)
-    {
-      warning (_("Unable to fetch general registers."));
-      return;
-    }
+    perror_with_name (_("Unable to fetch general registers."));
 
   aarch32_gp_regcache_supply (regcache, (uint32_t *) regs, arm_apcs_32);
 }
@@ -223,7 +194,7 @@ store_regs (const struct regcache *regcache)
   elf_gregset_t regs;
 
   /* Get the thread id for the ptrace call.  */
-  tid = GET_THREAD_ID (inferior_ptid);
+  tid = ptid_get_lwp (inferior_ptid);
 
   /* Fetch the general registers.  */
   if (have_ptrace_getregset == TRIBOOL_TRUE)
@@ -239,10 +210,7 @@ store_regs (const struct regcache *regcache)
     ret = ptrace (PTRACE_GETREGS, tid, 0, &regs);
 
   if (ret < 0)
-    {
-      warning (_("Unable to fetch general registers."));
-      return;
-    }
+    perror_with_name (_("Unable to fetch general registers."));
 
   aarch32_gp_regcache_collect (regcache, (uint32_t *) regs, arm_apcs_32);
 
@@ -259,10 +227,7 @@ store_regs (const struct regcache *regcache)
     ret = ptrace (PTRACE_SETREGS, tid, 0, &regs);
 
   if (ret < 0)
-    {
-      warning (_("Unable to store general registers."));
-      return;
-    }
+    perror_with_name (_("Unable to store general registers."));
 }
 
 /* Fetch all WMMX registers of the process and store into
@@ -277,14 +242,11 @@ fetch_wmmx_regs (struct regcache *regcache)
   int ret, regno, tid;
 
   /* Get the thread id for the ptrace call.  */
-  tid = GET_THREAD_ID (inferior_ptid);
+  tid = ptid_get_lwp (inferior_ptid);
 
   ret = ptrace (PTRACE_GETWMMXREGS, tid, 0, regbuf);
   if (ret < 0)
-    {
-      warning (_("Unable to fetch WMMX registers."));
-      return;
-    }
+    perror_with_name (_("Unable to fetch WMMX registers."));
 
   for (regno = 0; regno < 16; regno++)
     regcache_raw_supply (regcache, regno + ARM_WR0_REGNUM,
@@ -306,14 +268,11 @@ store_wmmx_regs (const struct regcache *regcache)
   int ret, regno, tid;
 
   /* Get the thread id for the ptrace call.  */
-  tid = GET_THREAD_ID (inferior_ptid);
+  tid = ptid_get_lwp (inferior_ptid);
 
   ret = ptrace (PTRACE_GETWMMXREGS, tid, 0, regbuf);
   if (ret < 0)
-    {
-      warning (_("Unable to fetch WMMX registers."));
-      return;
-    }
+    perror_with_name (_("Unable to fetch WMMX registers."));
 
   for (regno = 0; regno < 16; regno++)
     if (REG_VALID == regcache_register_status (regcache,
@@ -336,10 +295,7 @@ store_wmmx_regs (const struct regcache *regcache)
   ret = ptrace (PTRACE_SETWMMXREGS, tid, 0, regbuf);
 
   if (ret < 0)
-    {
-      warning (_("Unable to store WMMX registers."));
-      return;
-    }
+    perror_with_name (_("Unable to store WMMX registers."));
 }
 
 static void
@@ -351,7 +307,7 @@ fetch_vfp_regs (struct regcache *regcache)
   struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
 
   /* Get the thread id for the ptrace call.  */
-  tid = GET_THREAD_ID (inferior_ptid);
+  tid = ptid_get_lwp (inferior_ptid);
 
   if (have_ptrace_getregset == TRIBOOL_TRUE)
     {
@@ -365,10 +321,7 @@ fetch_vfp_regs (struct regcache *regcache)
     ret = ptrace (PTRACE_GETVFPREGS, tid, 0, regbuf);
 
   if (ret < 0)
-    {
-      warning (_("Unable to fetch VFP registers."));
-      return;
-    }
+    perror_with_name (_("Unable to fetch VFP registers."));
 
   aarch32_vfp_regcache_supply (regcache, regbuf,
 			       tdep->vfp_register_count);
@@ -383,7 +336,7 @@ store_vfp_regs (const struct regcache *regcache)
   struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
 
   /* Get the thread id for the ptrace call.  */
-  tid = GET_THREAD_ID (inferior_ptid);
+  tid = ptid_get_lwp (inferior_ptid);
 
   if (have_ptrace_getregset == TRIBOOL_TRUE)
     {
@@ -397,10 +350,7 @@ store_vfp_regs (const struct regcache *regcache)
     ret = ptrace (PTRACE_GETVFPREGS, tid, 0, regbuf);
 
   if (ret < 0)
-    {
-      warning (_("Unable to fetch VFP registers (for update)."));
-      return;
-    }
+    perror_with_name (_("Unable to fetch VFP registers (for update)."));
 
   aarch32_vfp_regcache_collect (regcache, regbuf,
 				tdep->vfp_register_count);
@@ -417,10 +367,7 @@ store_vfp_regs (const struct regcache *regcache)
     ret = ptrace (PTRACE_SETVFPREGS, tid, 0, regbuf);
 
   if (ret < 0)
-    {
-      warning (_("Unable to store VFP registers."));
-      return;
-    }
+    perror_with_name (_("Unable to store VFP registers."));
 }
 
 /* Fetch registers from the child process.  Fetch all registers if
@@ -553,7 +500,7 @@ arm_linux_read_description (struct target_ops *ops)
     {
       elf_gregset_t gpregs;
       struct iovec iov;
-      int tid = GET_THREAD_ID (inferior_ptid);
+      int tid = ptid_get_lwp (inferior_ptid);
 
       iov.iov_base = &gpregs;
       iov.iov_len = sizeof (gpregs);
@@ -592,7 +539,7 @@ arm_linux_read_description (struct target_ops *ops)
 	 registers.  Support was added in 2.6.30.  */
       pid = ptid_get_lwp (inferior_ptid);
       errno = 0;
-      buf = alloca (VFP_REGS_SIZE);
+      buf = (char *) alloca (VFP_REGS_SIZE);
       if (ptrace (PTRACE_GETVFPREGS, pid, 0, buf) < 0
 	  && errno == EIO)
 	result = NULL;
@@ -636,7 +583,7 @@ arm_linux_get_hwbp_cap (void)
       int tid;
       unsigned int val;
 
-      tid = GET_THREAD_ID (inferior_ptid);
+      tid = ptid_get_lwp (inferior_ptid);
       if (ptrace (PTRACE_GETHBPREGS, tid, 0, &val) < 0)
 	available = 0;
       else
@@ -808,7 +755,7 @@ arm_linux_add_process (pid_t pid)
 {
   struct arm_linux_process_info *proc;
 
-  proc = xcalloc (1, sizeof (*proc));
+  proc = XCNEW (struct arm_linux_process_info);
   proc->pid = pid;
 
   proc->next = arm_linux_process_list;
@@ -923,14 +870,14 @@ arm_linux_hw_breakpoint_initialize (struct gdbarch *gdbarch,
   p->control = arm_hwbp_control_initialize (mask, arm_hwbp_break, 1);
 }
 
-/* Get the ARM hardware breakpoint type from the type value we're
+/* Get the ARM hardware breakpoint type from the TYPE value we're
    given when asked to set a watchpoint.  */
 static arm_hwbp_type 
 arm_linux_get_hwbp_type (enum target_hw_bp_type type)
 {
-  if (rw == hw_read)
+  if (type == hw_read)
     return arm_hwbp_load;
-  else if (rw == hw_write)
+  else if (type == hw_write)
     return arm_hwbp_store;
   else
     return arm_hwbp_access;
@@ -1168,8 +1115,8 @@ arm_linux_insert_watchpoint (struct target_ops *self,
 
 /* Remove a hardware breakpoint.  */
 static int
-arm_linux_remove_watchpoint (struct target_ops *self,
-			     CORE_ADDR addr, int len, int rw,
+arm_linux_remove_watchpoint (struct target_ops *self, CORE_ADDR addr,
+			     int len, enum target_hw_bp_type rw,
 			     struct expression *cond)
 {
   struct lwp_info *lp;

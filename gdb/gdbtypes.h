@@ -1,7 +1,7 @@
 
 /* Internal type definitions for GDB.
 
-   Copyright (C) 1992-2015 Free Software Foundation, Inc.
+   Copyright (C) 1992-2016 Free Software Foundation, Inc.
 
    Contributed by Cygnus Support, using pieces from other GDB modules.
 
@@ -440,6 +440,14 @@ enum dynamic_prop_node_kind
   /* A property providing a type's data location.
      Evaluating this field yields to the location of an object's data.  */
   DYN_PROP_DATA_LOCATION,
+
+  /* A property representing DW_AT_allocated.  The presence of this attribute
+     indicates that the object of the type can be allocated/deallocated.  */
+  DYN_PROP_ALLOCATED,
+
+  /* A property representing DW_AT_allocated.  The presence of this attribute
+     indicated that the object of the type can be associated.  */
+  DYN_PROP_ASSOCIATED,
 };
 
 /* * List for dynamic type attributes.  */
@@ -503,7 +511,7 @@ union field_location
      gdbarch_bits_big_endian=0 targets, it is the bit offset to
      the LSB.  */
 
-  int bitpos;
+  LONGEST bitpos;
 
   /* * Enum value.  */
   LONGEST enumval;
@@ -1210,9 +1218,9 @@ extern void allocate_gnat_aux_type (struct type *);
 
 #define INIT_FUNC_SPECIFIC(type)					       \
   (TYPE_SPECIFIC_FIELD (type) = TYPE_SPECIFIC_FUNC,			       \
-   TYPE_MAIN_TYPE (type)->type_specific.func_stuff			       \
-     = TYPE_ZALLOC (type,						       \
-		    sizeof (*TYPE_MAIN_TYPE (type)->type_specific.func_stuff)))
+   TYPE_MAIN_TYPE (type)->type_specific.func_stuff = (struct func_type *)      \
+     TYPE_ZALLOC (type,							       \
+		  sizeof (*TYPE_MAIN_TYPE (type)->type_specific.func_stuff)))
 
 #define TYPE_INSTANCE_FLAGS(thistype) (thistype)->instance_flags
 #define TYPE_MAIN_TYPE(thistype) (thistype)->main_type
@@ -1257,6 +1265,12 @@ extern void allocate_gnat_aux_type (struct type *);
   TYPE_DATA_LOCATION (thistype)->data.const_val
 #define TYPE_DATA_LOCATION_KIND(thistype) \
   TYPE_DATA_LOCATION (thistype)->kind
+
+/* Property accessors for the type allocated/associated.  */
+#define TYPE_ALLOCATED_PROP(thistype) \
+  get_dyn_prop (DYN_PROP_ALLOCATED, thistype)
+#define TYPE_ASSOCIATED_PROP(thistype) \
+  get_dyn_prop (DYN_PROP_ASSOCIATED, thistype)
 
 /* Attribute accessors for dynamic properties.  */
 #define TYPE_DYN_PROP_LIST(thistype) \
@@ -1662,13 +1676,17 @@ extern struct type *init_type (enum type_code, int, int, const char *,
 			       struct objfile *);
 
 /* Helper functions to construct architecture-owned types.  */
-extern struct type *arch_type (struct gdbarch *, enum type_code, int, char *);
-extern struct type *arch_integer_type (struct gdbarch *, int, int, char *);
-extern struct type *arch_character_type (struct gdbarch *, int, int, char *);
-extern struct type *arch_boolean_type (struct gdbarch *, int, int, char *);
-extern struct type *arch_float_type (struct gdbarch *, int, char *,
+extern struct type *arch_type (struct gdbarch *, enum type_code, int,
+			       const char *);
+extern struct type *arch_integer_type (struct gdbarch *, int, int,
+				       const char *);
+extern struct type *arch_character_type (struct gdbarch *, int, int,
+					 const char *);
+extern struct type *arch_boolean_type (struct gdbarch *, int, int,
+				       const char *);
+extern struct type *arch_float_type (struct gdbarch *, int, const char *,
 				     const struct floatformat **);
-extern struct type *arch_complex_type (struct gdbarch *, char *,
+extern struct type *arch_complex_type (struct gdbarch *, const char *,
 				       struct type *);
 
 /* Helper functions to construct a struct or record type.  An
@@ -1678,22 +1696,26 @@ extern struct type *arch_complex_type (struct gdbarch *, char *,
    field packed against the previous.  */
 
 extern struct type *arch_composite_type (struct gdbarch *gdbarch,
-					 char *name, enum type_code code);
-extern void append_composite_type_field (struct type *t, char *name,
+					 const char *name, enum type_code code);
+extern void append_composite_type_field (struct type *t, const char *name,
 					 struct type *field);
 extern void append_composite_type_field_aligned (struct type *t,
-						 char *name,
+						 const char *name,
 						 struct type *field,
 						 int alignment);
-struct field *append_composite_type_field_raw (struct type *t, char *name,
+struct field *append_composite_type_field_raw (struct type *t, const char *name,
 					       struct type *field);
 
 /* Helper functions to construct a bit flags type.  An initially empty
    type is created using arch_flag_type().  Flags are then added using
-   append_flag_type_flag().  */
+   append_flag_type_field() and append_flag_type_flag().  */
 extern struct type *arch_flags_type (struct gdbarch *gdbarch,
-				     char *name, int length);
-extern void append_flags_type_flag (struct type *type, int bitpos, char *name);
+				     const char *name, int length);
+extern void append_flags_type_field (struct type *type,
+				     int start_bitpos, int nr_bits,
+				     struct type *field_type, const char *name);
+extern void append_flags_type_flag (struct type *type, int bitpos,
+				    const char *name);
 
 extern void make_vector_type (struct type *array_type);
 extern struct type *init_vector_type (struct type *elt_type, int n);
@@ -1809,6 +1831,9 @@ extern void add_dyn_prop
   (enum dynamic_prop_node_kind kind, struct dynamic_prop prop,
    struct type *type, struct objfile *objfile);
 
+extern void remove_dyn_prop (enum dynamic_prop_node_kind prop_kind,
+                             struct type *type);
+
 extern struct type *check_typedef (struct type *);
 
 extern void check_stub_method_group (struct type *, int);
@@ -1904,13 +1929,15 @@ extern int field_is_static (struct field *);
 
 /* printcmd.c */
 
-extern void print_scalar_formatted (const void *, struct type *,
+extern void print_scalar_formatted (const gdb_byte *, struct type *,
 				    const struct value_print_options *,
 				    int, struct ui_file *);
 
 extern int can_dereference (struct type *);
 
 extern int is_integral_type (struct type *);
+
+extern int is_scalar_type (struct type *type);
 
 extern int is_scalar_type_recursive (struct type *);
 
@@ -1929,5 +1956,9 @@ extern struct type *copy_type (const struct type *type);
 extern int types_equal (struct type *, struct type *);
 
 extern int types_deeply_equal (struct type *, struct type *);
+
+extern int type_not_allocated (const struct type *type);
+
+extern int type_not_associated (const struct type *type);
 
 #endif /* GDBTYPES_H */

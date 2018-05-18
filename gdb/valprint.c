@@ -1,6 +1,6 @@
 /* Print values for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2015 Free Software Foundation, Inc.
+   Copyright (C) 1986-2016 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -34,6 +34,7 @@
 #include "ada-lang.h"
 #include "gdb_obstack.h"
 #include "charset.h"
+#include "typeprint.h"
 #include <ctype.h>
 
 /* Maximum number of wchars returned from wchar_iterate.  */
@@ -96,6 +97,10 @@ static void set_input_radix_1 (int, unsigned);
 static void set_output_radix (char *, int, struct cmd_list_element *);
 
 static void set_output_radix_1 (int, unsigned);
+
+static void val_print_type_code_flags (struct type *type,
+				       const gdb_byte *valaddr,
+				       struct ui_file *stream);
 
 void _initialize_valprint (void);
 
@@ -298,10 +303,22 @@ val_print_scalar_type_p (struct type *type)
 int
 valprint_check_validity (struct ui_file *stream,
 			 struct type *type,
-			 int embedded_offset,
+			 LONGEST embedded_offset,
 			 const struct value *val)
 {
   type = check_typedef (type);
+
+  if (type_not_associated (type))
+    {
+      val_print_not_associated (stream);
+      return 0;
+    }
+
+  if (type_not_allocated (type))
+    {
+      val_print_not_allocated (stream);
+      return 0;
+    }
 
   if (TYPE_CODE (type) != TYPE_CODE_UNION
       && TYPE_CODE (type) != TYPE_CODE_STRUCT
@@ -318,8 +335,22 @@ valprint_check_validity (struct ui_file *stream,
       if (value_bits_synthetic_pointer (val, TARGET_CHAR_BIT * embedded_offset,
 					TARGET_CHAR_BIT * TYPE_LENGTH (type)))
 	{
-	  fputs_filtered (_("<synthetic pointer>"), stream);
-	  return 0;
+	  const int is_ref = TYPE_CODE (type) == TYPE_CODE_REF;
+	  int ref_is_addressable = 0;
+
+	  if (is_ref)
+	    {
+	      const struct value *deref_val = coerce_ref_if_computed (val);
+
+	      if (deref_val != NULL)
+		ref_is_addressable = value_lval_const (deref_val) == lval_memory;
+	    }
+
+	  if (!is_ref || !ref_is_addressable)
+	    fputs_filtered (_("<synthetic pointer>"), stream);
+
+	  /* C++ references should be valid even if they're synthetic.  */
+	  return is_ref;
 	}
 
       if (!value_bytes_available (val, embedded_offset, TYPE_LENGTH (type)))
@@ -390,10 +421,12 @@ print_unpacked_pointer (struct type *type, struct type *elttype,
 
 static void
 generic_val_print_array (struct type *type, const gdb_byte *valaddr,
-		   int embedded_offset, CORE_ADDR address,
-		   struct ui_file *stream, int recurse,
-		   const struct value *original_value,
-		   const struct value_print_options *options)
+			 int embedded_offset, CORE_ADDR address,
+			 struct ui_file *stream, int recurse,
+			 const struct value *original_value,
+			 const struct value_print_options *options,
+			 const struct
+			     generic_val_print_decorations *decorations)
 {
   struct type *unresolved_elttype = TYPE_TARGET_TYPE (type);
   struct type *elttype = check_typedef (unresolved_elttype);
@@ -410,11 +443,11 @@ generic_val_print_array (struct type *type, const gdb_byte *valaddr,
 	  print_spaces_filtered (2 + 2 * recurse, stream);
 	}
 
-      fprintf_filtered (stream, "{");
+      fputs_filtered (decorations->array_start, stream);
       val_print_array_elements (type, valaddr, embedded_offset,
 				address, stream,
 				recurse, original_value, options, 0);
-      fprintf_filtered (stream, "}");
+      fputs_filtered (decorations->array_end, stream);
     }
   else
     {
@@ -465,6 +498,42 @@ generic_val_print_memberptr (struct type *type, const gdb_byte *valaddr,
 			      original_value, options, 0, stream);
 }
 
+/* Print '@' followed by the address contained in ADDRESS_BUFFER.  */
+
+static void
+print_ref_address (struct type *type, const gdb_byte *address_buffer,
+		  int embedded_offset, struct ui_file *stream)
+{
+  struct gdbarch *gdbarch = get_type_arch (type);
+
+  if (address_buffer != NULL)
+    {
+      CORE_ADDR address
+	= extract_typed_address (address_buffer + embedded_offset, type);
+
+      fprintf_filtered (stream, "@");
+      fputs_filtered (paddress (gdbarch, address), stream);
+    }
+  /* Else: we have a non-addressable value, such as a DW_AT_const_value.  */
+}
+
+/* If VAL is addressable, return the value contents buffer of a value that
+   represents a pointer to VAL.  Otherwise return NULL.  */
+
+static const gdb_byte *
+get_value_addr_contents (struct value *deref_val)
+{
+  gdb_assert (deref_val != NULL);
+
+  if (value_lval_const (deref_val) == lval_memory)
+    return value_contents_for_printing_const (value_addr (deref_val));
+  else
+    {
+      /* We have a non-addressable value, such as a DW_AT_const_value.  */
+      return NULL;
+    }
+}
+
 /* generic_val_print helper for TYPE_CODE_REF.  */
 
 static void
@@ -473,68 +542,74 @@ generic_val_print_ref (struct type *type, const gdb_byte *valaddr,
 		       const struct value *original_value,
 		       const struct value_print_options *options)
 {
-  struct gdbarch *gdbarch = get_type_arch (type);
   struct type *elttype = check_typedef (TYPE_TARGET_TYPE (type));
+  struct value *deref_val = NULL;
+  const int value_is_synthetic
+    = value_bits_synthetic_pointer (original_value,
+				    TARGET_CHAR_BIT * embedded_offset,
+				    TARGET_CHAR_BIT * TYPE_LENGTH (type));
+  const int must_coerce_ref = ((options->addressprint && value_is_synthetic)
+			       || options->deref_ref);
+  const int type_is_defined = TYPE_CODE (elttype) != TYPE_CODE_UNDEF;
+
+  if (must_coerce_ref && type_is_defined)
+    {
+      deref_val = coerce_ref_if_computed (original_value);
+
+      if (deref_val != NULL)
+	{
+	  /* More complicated computed references are not supported.  */
+	  gdb_assert (embedded_offset == 0);
+	}
+      else
+	deref_val = value_at (TYPE_TARGET_TYPE (type),
+			      unpack_pointer (type, valaddr + embedded_offset));
+    }
+  /* Else, original_value isn't a synthetic reference or we don't have to print
+     the reference's contents.
+
+     Notice that for references to TYPE_CODE_STRUCT, 'set print object on' will
+     cause original_value to be a not_lval instead of an lval_computed,
+     which will make value_bits_synthetic_pointer return false.
+     This happens because if options->objectprint is true, c_value_print will
+     overwrite original_value's contents with the result of coercing
+     the reference through value_addr, and then set its type back to
+     TYPE_CODE_REF.  In that case we don't have to coerce the reference again;
+     we can simply treat it as non-synthetic and move on.  */
 
   if (options->addressprint)
     {
-      CORE_ADDR addr
-	= extract_typed_address (valaddr + embedded_offset, type);
+      const gdb_byte *address = (value_is_synthetic && type_is_defined
+				 ? get_value_addr_contents (deref_val)
+				 : valaddr);
 
-      fprintf_filtered (stream, "@");
-      fputs_filtered (paddress (gdbarch, addr), stream);
+      print_ref_address (type, address, embedded_offset, stream);
+
       if (options->deref_ref)
 	fputs_filtered (": ", stream);
     }
-  /* De-reference the reference.  */
+
   if (options->deref_ref)
     {
-      if (TYPE_CODE (elttype) != TYPE_CODE_UNDEF)
-	{
-	  struct value *deref_val;
-
-	  deref_val = coerce_ref_if_computed (original_value);
-	  if (deref_val != NULL)
-	    {
-	      /* More complicated computed references are not supported.  */
-	      gdb_assert (embedded_offset == 0);
-	    }
-	  else
-	    deref_val = value_at (TYPE_TARGET_TYPE (type),
-				  unpack_pointer (type,
-						  (valaddr
-						   + embedded_offset)));
-
-	  common_val_print (deref_val, stream, recurse, options,
-			    current_language);
-	}
+      if (type_is_defined)
+	common_val_print (deref_val, stream, recurse, options,
+			  current_language);
       else
 	fputs_filtered ("???", stream);
     }
 }
 
-/* generic_val_print helper for TYPE_CODE_ENUM.  */
+/* Helper function for generic_val_print_enum.
+   This is also used to print enums in TYPE_CODE_FLAGS values.  */
 
 static void
-generic_val_print_enum (struct type *type, const gdb_byte *valaddr,
-			int embedded_offset, struct ui_file *stream,
-			const struct value *original_value,
-			const struct value_print_options *options)
+generic_val_print_enum_1 (struct type *type, LONGEST val,
+			  struct ui_file *stream)
 {
   unsigned int i;
   unsigned int len;
-  LONGEST val;
-  struct gdbarch *gdbarch = get_type_arch (type);
-  int unit_size = gdbarch_addressable_memory_unit_size (gdbarch);
 
-  if (options->format)
-    {
-      val_print_scalar_formatted (type, valaddr, embedded_offset,
-				  original_value, options, 0, stream);
-      return;
-    }
   len = TYPE_NFIELDS (type);
-  val = unpack_long (type, valaddr + embedded_offset * unit_size);
   for (i = 0; i < len; i++)
     {
       QUIT;
@@ -582,6 +657,29 @@ generic_val_print_enum (struct type *type, const gdb_byte *valaddr,
     }
   else
     print_longest (stream, 'd', 0, val);
+}
+
+/* generic_val_print helper for TYPE_CODE_ENUM.  */
+
+static void
+generic_val_print_enum (struct type *type, const gdb_byte *valaddr,
+			int embedded_offset, struct ui_file *stream,
+			const struct value *original_value,
+			const struct value_print_options *options)
+{
+  LONGEST val;
+  struct gdbarch *gdbarch = get_type_arch (type);
+  int unit_size = gdbarch_addressable_memory_unit_size (gdbarch);
+
+  if (options->format)
+    {
+      val_print_scalar_formatted (type, valaddr, embedded_offset,
+				  original_value, options, 0, stream);
+      return;
+    }
+  val = unpack_long (type, valaddr + embedded_offset * unit_size);
+
+  generic_val_print_enum_1 (type, val, stream);
 }
 
 /* generic_val_print helper for TYPE_CODE_FLAGS.  */
@@ -822,7 +920,7 @@ generic_val_print (struct type *type, const gdb_byte *valaddr,
     {
     case TYPE_CODE_ARRAY:
       generic_val_print_array (type, valaddr, embedded_offset, address, stream,
-			       recurse, original_value, options);
+			       recurse, original_value, options, decorations);
       break;
 
     case TYPE_CODE_MEMBERPTR:
@@ -944,7 +1042,7 @@ generic_val_print (struct type *type, const gdb_byte *valaddr,
    RECURSE.  */
 
 void
-val_print (struct type *type, const gdb_byte *valaddr, int embedded_offset,
+val_print (struct type *type, const gdb_byte *valaddr, LONGEST embedded_offset,
 	   CORE_ADDR address, struct ui_file *stream, int recurse,
 	   const struct value *val,
 	   const struct value_print_options *options,
@@ -1043,6 +1141,18 @@ value_check_printable (struct value *val, struct ui_file *stream,
       return 0;
     }
 
+  if (type_not_associated (value_type (val)))
+    {
+      val_print_not_associated (stream);
+      return 0;
+    }
+
+  if (type_not_allocated (value_type (val)))
+    {
+      val_print_not_allocated (stream);
+      return 0;
+    }
+
   return 1;
 }
 
@@ -1137,26 +1247,51 @@ val_print_type_code_int (struct type *type, const gdb_byte *valaddr,
     }
 }
 
-void
+static void
 val_print_type_code_flags (struct type *type, const gdb_byte *valaddr,
 			   struct ui_file *stream)
 {
   ULONGEST val = unpack_long (type, valaddr);
-  int bitpos, nfields = TYPE_NFIELDS (type);
+  int field, nfields = TYPE_NFIELDS (type);
+  struct gdbarch *gdbarch = get_type_arch (type);
+  struct type *bool_type = builtin_type (gdbarch)->builtin_bool;
 
-  fputs_filtered ("[ ", stream);
-  for (bitpos = 0; bitpos < nfields; bitpos++)
+  fputs_filtered ("[", stream);
+  for (field = 0; field < nfields; field++)
     {
-      if (TYPE_FIELD_BITPOS (type, bitpos) != -1
-	  && (val & ((ULONGEST)1 << bitpos)))
+      if (TYPE_FIELD_NAME (type, field)[0] != '\0')
 	{
-	  if (TYPE_FIELD_NAME (type, bitpos))
-	    fprintf_filtered (stream, "%s ", TYPE_FIELD_NAME (type, bitpos));
+	  struct type *field_type = TYPE_FIELD_TYPE (type, field);
+
+	  if (field_type == bool_type
+	      /* We require boolean types here to be one bit wide.  This is a
+		 problematic place to notify the user of an internal error
+		 though.  Instead just fall through and print the field as an
+		 int.  */
+	      && TYPE_FIELD_BITSIZE (type, field) == 1)
+	    {
+	      if (val & ((ULONGEST)1 << TYPE_FIELD_BITPOS (type, field)))
+		fprintf_filtered (stream, " %s",
+				  TYPE_FIELD_NAME (type, field));
+	    }
 	  else
-	    fprintf_filtered (stream, "#%d ", bitpos);
+	    {
+	      unsigned field_len = TYPE_FIELD_BITSIZE (type, field);
+	      ULONGEST field_val
+		= val >> (TYPE_FIELD_BITPOS (type, field) - field_len + 1);
+
+	      if (field_len < sizeof (ULONGEST) * TARGET_CHAR_BIT)
+		field_val &= ((ULONGEST) 1 << field_len) - 1;
+	      fprintf_filtered (stream, " %s=",
+				TYPE_FIELD_NAME (type, field));
+	      if (TYPE_CODE (field_type) == TYPE_CODE_ENUM)
+		generic_val_print_enum_1 (field_type, field_val, stream);
+	      else
+		print_longest (stream, 'd', 0, field_val);
+	    }
 	}
     }
-  fputs_filtered ("]", stream);
+  fputs_filtered (" ]", stream);
 }
 
 /* Print a scalar of data of type TYPE, pointed to in GDB by VALADDR,
@@ -1168,7 +1303,7 @@ val_print_type_code_flags (struct type *type, const gdb_byte *valaddr,
 
 void
 val_print_scalar_formatted (struct type *type,
-			    const gdb_byte *valaddr, int embedded_offset,
+			    const gdb_byte *valaddr, LONGEST embedded_offset,
 			    const struct value *val,
 			    const struct value_print_options *options,
 			    int size,
@@ -1603,7 +1738,7 @@ print_decimal_chars (struct ui_file *stream, const gdb_byte *valaddr,
      as the base 16 number, which is 2 digits per byte.  */
 
   decimal_len = len * 2 * 2;
-  digits = xmalloc (decimal_len);
+  digits = (unsigned char *) xmalloc (decimal_len);
 
   for (i = 0; i < decimal_len; i++)
     {
@@ -1830,7 +1965,7 @@ maybe_print_array_index (struct type *index_type, LONGEST index,
 
 void
 val_print_array_elements (struct type *type,
-			  const gdb_byte *valaddr, int embedded_offset,
+			  const gdb_byte *valaddr, LONGEST embedded_offset,
 			  CORE_ADDR address, struct ui_file *stream,
 			  int recurse,
 			  const struct value *val,
@@ -2119,7 +2254,7 @@ read_string (CORE_ADDR addr, int len, int width, unsigned int fetchlimit,
   else
     {				/* Length of string is really 0!  */
       /* We always allocate *buffer.  */
-      *buffer = bufptr = xmalloc (1);
+      *buffer = bufptr = (gdb_byte *) xmalloc (1);
       errcode = 0;
     }
 
@@ -2272,7 +2407,7 @@ generic_emit_char (int c, struct type *type, struct ui_file *stream,
   struct wchar_iterator *iter;
   int need_escape = 0;
 
-  buf = alloca (TYPE_LENGTH (type));
+  buf = (gdb_byte *) alloca (TYPE_LENGTH (type));
   pack_long (buf, type, c);
 
   iter = make_wchar_iterator (buf, TYPE_LENGTH (type),
@@ -2337,7 +2472,7 @@ generic_emit_char (int c, struct type *type, struct ui_file *stream,
 			     sizeof (gdb_wchar_t), &output, translit_char);
   obstack_1grow (&output, '\0');
 
-  fputs_filtered (obstack_base (&output), stream);
+  fputs_filtered ((const char *) obstack_base (&output), stream);
 
   do_cleanups (cleanups);
 }
@@ -2692,7 +2827,7 @@ generic_printstr (struct ui_file *stream, struct type *type,
 			     sizeof (gdb_wchar_t), &output, translit_char);
   obstack_1grow (&output, '\0');
 
-  fputs_filtered (obstack_base (&output), stream);
+  fputs_filtered ((const char *) obstack_base (&output), stream);
 
   do_cleanups (cleanup);
 }
@@ -2712,7 +2847,7 @@ val_print_string (struct type *elttype, const char *encoding,
 		  const struct value_print_options *options)
 {
   int force_ellipsis = 0;	/* Force ellipsis to be printed if nonzero.  */
-  int errcode;			/* Errno returned from bad reads.  */
+  int err;			/* Non-zero if we got a bad read.  */
   int found_nul;		/* Non-zero if we found the nul char.  */
   unsigned int fetchlimit;	/* Maximum number of chars to print.  */
   int bytes_read;
@@ -2733,8 +2868,8 @@ val_print_string (struct type *elttype, const char *encoding,
   fetchlimit = (len == -1 ? options->print_max : min (len,
 						      options->print_max));
 
-  errcode = read_string (addr, len, width, fetchlimit, byte_order,
-			 &buffer, &bytes_read);
+  err = read_string (addr, len, width, fetchlimit, byte_order,
+		     &buffer, &bytes_read);
   old_chain = make_cleanup (xfree, buffer);
 
   addr += bytes_read;
@@ -2762,7 +2897,7 @@ val_print_string (struct type *elttype, const char *encoding,
 	  && extract_unsigned_integer (peekbuf, width, byte_order) != 0)
 	force_ellipsis = 1;
     }
-  else if ((len >= 0 && errcode != 0) || (len > bytes_read / width))
+  else if ((len >= 0 && err != 0) || (len > bytes_read / width))
     {
       /* Getting an error when we have a requested length, or fetching less
          than the number of characters actually requested, always make us
@@ -2773,17 +2908,17 @@ val_print_string (struct type *elttype, const char *encoding,
   /* If we get an error before fetching anything, don't print a string.
      But if we fetch something and then get an error, print the string
      and then the error message.  */
-  if (errcode == 0 || bytes_read > 0)
+  if (err == 0 || bytes_read > 0)
     {
       LA_PRINT_STRING (stream, elttype, buffer, bytes_read / width,
 		       encoding, force_ellipsis, options);
     }
 
-  if (errcode != 0)
+  if (err != 0)
     {
       char *str;
 
-      str = memory_error_message (errcode, gdbarch, addr);
+      str = memory_error_message (TARGET_XFER_E_IO, gdbarch, addr);
       make_cleanup (xfree, str);
 
       fprintf_filtered (stream, "<error: ");

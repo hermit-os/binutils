@@ -10,7 +10,7 @@
 
 @copying
 @c man begin COPYRIGHT
-Copyright @copyright{} 1991-2015 Free Software Foundation, Inc.
+Copyright @copyright{} 1991-2016 Free Software Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3
@@ -234,8 +234,7 @@ a normal archive.  Instead the elements of the first archive are added
 individually to the second archive.
 
 The paths to the elements of the archive are stored relative to the
-archive itself.  For security reasons absolute paths and paths with a
-@code{/../} component are not allowed.
+archive itself.
 
 @cindex compatibility, @command{ar}
 @cindex @command{ar} compatibility
@@ -1013,11 +1012,12 @@ types.  This option is only available if the toolchain has been built
 with plugin support enabled.
 
 @item --size-sort
-Sort symbols by size.  The size is computed as the difference between
-the value of the symbol and the value of the symbol with the next higher
-value.  If the @code{bsd} output format is used the size of the symbol
-is printed, rather than the value, and @samp{-S} must be used in order
-both size and value to be printed.
+Sort symbols by size.  For ELF objects symbol sizes are read from the
+ELF, for other object types the symbol sizes are computed as the
+difference between the value of the symbol and the value of the symbol
+with the next higher value.  If the @code{bsd} output format is used
+the size of the symbol is printed, rather than the value, and
+@samp{-S} must be used in order both size and value to be printed.
 
 @item --special-syms
 Display symbols which have a target-specific special meaning.  These
@@ -1107,6 +1107,7 @@ objcopy [@option{-F} @var{bfdname}|@option{--target=}@var{bfdname}]
         [@option{--localize-symbols=}@var{filename}]
         [@option{--globalize-symbols=}@var{filename}]
         [@option{--weaken-symbols=}@var{filename}]
+        [@option{--add-symbol} @var{name}=[@var{section}:]@var{value}[,@var{flags}]
         [@option{--alt-machine-code=}@var{index}]
         [@option{--prefix-symbols=}@var{string}]
         [@option{--prefix-sections=}@var{string}]
@@ -1131,6 +1132,7 @@ objcopy [@option{-F} @var{bfdname}|@option{--target=}@var{bfdname}]
         [@option{--decompress-debug-sections}]
         [@option{--dwarf-depth=@var{n}}]
         [@option{--dwarf-start=@var{n}}]
+        [@option{--elf-stt-common=@var{val}}]
         [@option{-v}|@option{--verbose}]
         [@option{-V}|@option{--version}]
         [@option{--help}] [@option{--info}]
@@ -1505,6 +1507,18 @@ command line.  In this case, pass the original section name to
 @option{--update-section}, and the original and new section names to
 @option{--rename-section}.
 
+@item --add-symbol @var{name}=[@var{section}:]@var{value}[,@var{flags}]
+Add a new symbol named @var{name} while copying the file.  This option may be
+specified multiple times.  If the @var{section} is given, the symbol will be
+associated with and relative to that section, otherwise it will be an ABS
+symbol.  Specifying an undefined section will result in a fatal error.  There
+is no check for the value, it will be taken as specified.  Symbol flags can
+be specified and not all flags will be meaningful for all object file
+formats.  By default, the symbol will be global.  The special flag
+'before=@var{othersym}' will insert the new symbol in front of the specified
+@var{othersym}, otherwise the symbol(s) will be added at the end of the
+symbol table in the order they appear.
+
 @item --rename-section @var{oldname}=@var{newname}[,@var{flags}]
 Rename a section from @var{oldname} to @var{newname}, optionally
 changing the section's flags to @var{flags} in the process.  This has
@@ -1731,6 +1745,12 @@ Strip a file, removing contents of any sections that would not be
 stripped by @option{--strip-debug} and leaving the debugging sections
 intact.  In ELF files, this preserves all note sections in the output.
 
+Note - the section headers of the stripped sections are preserved,
+including their sizes, but the contents of the section are discarded.
+The section headers are preserved so that other tools can match up the
+debuginfo file with the real executable, even if that executable has
+been relocated to a different address space.
+
 The intention is that this option will be used in conjunction with
 @option{--add-gnu-debuglink} to create a two part executable.  One a
 stripped binary which will occupy less space in RAM and in a
@@ -1854,7 +1874,7 @@ ELF ABI.  Note - if compression would actually make a section
 @itemx --compress-debug-sections=zlib-gabi
 For ELF files, these options control how DWARF debug sections are
 compressed.  @option{--compress-debug-sections=none} is equivalent
-to @option{--nocompress-debug-sections}.
+to @option{--decompress-debug-sections}.
 @option{--compress-debug-sections=zlib} and
 @option{--compress-debug-sections=zlib-gabi} are equivalent to
 @option{--compress-debug-sections}.
@@ -1867,6 +1887,14 @@ renamed.
 @item --decompress-debug-sections
 Decompress DWARF debug sections using zlib.  The original section
 names of the compressed sections are restored.
+
+@item --elf-stt-common=yes
+@itemx --elf-stt-common=no
+For ELF files, these options control whether common symbols should be
+converted to the @code{STT_COMMON} or @code{STT_OBJECT} type.
+@option{--elf-stt-common=yes} converts common symbol type to
+@code{STT_COMMON}. @option{--elf-stt-common=no} converts common symbol
+type to @code{STT_OBJECT}.
 
 @item -V
 @itemx --version
@@ -2106,6 +2134,11 @@ although @command{ld} relocates the sections correctly, using @samp{objdump
 -h} to list the file section headers cannot show the correct addresses.
 Instead, it shows the usual addresses, which are implicit for the
 target.
+
+Note, in some cases it is possible for a section to have both the
+READONLY and the NOREAD attributes set.  In such cases the NOREAD
+attribute takes precedence, but @command{objdump} will report both
+since the exact setting of the flag bits might be important.
 
 @item -H
 @itemx --help
@@ -2785,6 +2818,7 @@ strings [@option{-afovV}] [@option{-}@var{min-len}]
         [@option{-}] [@option{--all}] [@option{--print-file-name}]
         [@option{-T} @var{bfdname}] [@option{--target=}@var{bfdname}]
         [@option{-w}] [@option{--include-all-whitespace}]
+        [@option{-s}] [@option{--output-separator}@var{sep_string}]
         [@option{--help}] [@option{--version}] @var{file}@dots{}
 @c man end
 @end smallexample
@@ -2889,6 +2923,13 @@ By default tab and space characters are included in the strings that
 are displayed, but other whitespace characters, such a newlines and
 carriage returns, are not.  The @option{-w} option changes this so
 that all whitespace characters are considered to be part of a string.
+
+@item -s
+@itemx --output-separator
+By default, output strings are delimited by a new-line. This option
+allows you to supply any string to be used as the output record
+separator.  Useful with --include-all-whitespace where strings
+may contain new-lines internally.
 @end table
 
 @c man end
@@ -3074,9 +3115,16 @@ When stripping a file, perhaps with @option{--strip-debug} or
 which would otherwise get stripped.
 
 @item --only-keep-debug
-Strip a file, removing contents of any sections that would not be
+Strip a file, emptying the contents of any sections that would not be
 stripped by @option{--strip-debug} and leaving the debugging sections
-intact.  In ELF files, this preserves all note sections in the output.
+intact.  In ELF files, this preserves all the note sections in the
+output as well.
+
+Note - the section headers of the stripped sections are preserved,
+including their sizes, but the contents of the section are discarded.
+The section headers are preserved so that other tools can match up the
+debuginfo file with the real executable, even if that executable has
+been relocated to a different address space.
 
 The intention is that this option will be used in conjunction with
 @option{--add-gnu-debuglink} to create a two part executable.  One a

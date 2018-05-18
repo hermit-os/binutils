@@ -1,4 +1,4 @@
-# Copyright 1988-2015 Free Software Foundation, Inc.
+# Copyright 1988-2016 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ proc do_steps_and_nexts {} {
 	# me with GCC 3.1 on i686-pc-linux-gnu when I compile with
 	# optimization.
 	gdb_test_multiple "list" "list" {
-	    -re ".*context = data.*$gdb_prompt $" {
+	    -re ".*context = \\(struct captured_main_args \\*\\) data.*$gdb_prompt $" {
 		set description "step over context initialization"
 		set command "step"
 	    }
@@ -203,6 +203,10 @@ proc do_steps_and_nexts {} {
 	    }
 	    -re ".*gdb_stderr = stdio_fileopen .stderr.;.*$gdb_prompt $" {
 		set description "step over gdb_stderr initialization"
+		set command "step"
+	    }
+	    -re "ui = current_ui.*$gdb_prompt $" {
+		set description "step over top_level initialization"
 		set command "step"
 	    }
 	    -re ".*main.c.*No such file or directory.*$gdb_prompt $" {
@@ -433,17 +437,20 @@ proc test_with_self { executable } {
     }
 
     # kill the xgdb process
-    set description "send ^C to child process"
-    send_gdb "\003"
-    gdb_expect {
-	-re "Program received signal SIGINT.*$gdb_prompt $" {
-	    pass "$description"
-	}
-	-re ".*$gdb_prompt $" {
-	    fail "$description"
-	}
-	timeout {
-	    fail "$description (timeout)"
+    if ![target_info exists gdb,nointerrupts] {
+	set description "send ^C to child process"
+	send_gdb "\003"
+	# "Thread 1" is displayed iff Guile support is linked in.
+	gdb_expect {
+	    -re "(Thread .*|Program) received signal SIGINT.*$gdb_prompt $" {
+		pass "$description"
+	    }
+	    -re ".*$gdb_prompt $" {
+		fail "$description"
+	    }
+	    timeout {
+		fail "$description (timeout)"
+	    }
 	}
     }
     
@@ -451,6 +458,10 @@ proc test_with_self { executable } {
     gdb_test "signal SIGINT" \
 	"Continuing with signal SIGINT.*" \
 	"$description"
+
+    # Switch back to the GDB thread if Guile support is linked in.
+    # "signal SIGINT" could also switch the current thread.
+    gdb_test "thread 1" {\[Switching to thread 1 .*\].*}
     
     # get a stack trace
     #

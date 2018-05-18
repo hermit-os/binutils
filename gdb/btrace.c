@@ -1,6 +1,6 @@
 /* Branch trace support for GDB, the GNU debugger.
 
-   Copyright (C) 2013-2015 Free Software Foundation, Inc.
+   Copyright (C) 2013-2016 Free Software Foundation, Inc.
 
    Contributed by Intel Corp. <markus.t.metzger@intel.com>
 
@@ -193,7 +193,7 @@ ftrace_new_function (struct btrace_function *prev,
 {
   struct btrace_function *bfun;
 
-  bfun = xzalloc (sizeof (*bfun));
+  bfun = XCNEW (struct btrace_function);
 
   bfun->msym = mfun;
   bfun->sym = fun;
@@ -660,6 +660,7 @@ btrace_compute_ftrace_bts (struct thread_info *tp,
 	  insn.pc = pc;
 	  insn.size = size;
 	  insn.iclass = ftrace_classify_insn (gdbarch, pc);
+	  insn.flags = 0;
 
 	  ftrace_update_insns (end, &insn);
 
@@ -725,6 +726,19 @@ pt_reclassify_insn (enum pt_insn_class iclass)
     }
 }
 
+/* Return the btrace instruction flags for INSN.  */
+
+static btrace_insn_flags
+pt_btrace_insn_flags (const struct pt_insn *insn)
+{
+  btrace_insn_flags flags = 0;
+
+  if (insn->speculative)
+    flags |= BTRACE_INSN_FLAG_SPECULATIVE;
+
+  return flags;
+}
+
 /* Add function branch trace using DECODER.  */
 
 static void
@@ -749,7 +763,7 @@ ftrace_add_pt (struct pt_insn_decoder *decoder,
       if (errcode < 0)
 	{
 	  if (errcode != -pte_eos)
-	    warning (_("Failed to synchronize onto the Intel(R) Processor "
+	    warning (_("Failed to synchronize onto the Intel Processor "
 		       "Trace stream: %s."), pt_errstr (pt_errcode (errcode)));
 	  break;
 	}
@@ -792,6 +806,7 @@ ftrace_add_pt (struct pt_insn_decoder *decoder,
 	  btinsn.pc = (CORE_ADDR) insn.ip;
 	  btinsn.size = (gdb_byte) insn.size;
 	  btinsn.iclass = pt_reclassify_insn (insn.iclass);
+	  btinsn.flags = pt_btrace_insn_flags (&insn);
 
 	  ftrace_update_insns (end, &btinsn);
 	}
@@ -806,7 +821,7 @@ ftrace_add_pt (struct pt_insn_decoder *decoder,
 
       pt_insn_get_offset (decoder, &offset);
 
-      warning (_("Failed to decode Intel(R) Processor Trace near trace "
+      warning (_("Failed to decode Intel Processor Trace near trace "
 		 "offset 0x%" PRIx64 " near recorded PC 0x%" PRIx64 ": %s."),
 	       offset, insn.ip, pt_errstr (pt_errcode (errcode)));
 
@@ -827,21 +842,22 @@ btrace_pt_readmem_callback (gdb_byte *buffer, size_t size,
 			    const struct pt_asid *asid, uint64_t pc,
 			    void *context)
 {
-  int errcode;
+  int result, errcode;
 
+  result = (int) size;
   TRY
     {
       errcode = target_read_code ((CORE_ADDR) pc, buffer, size);
       if (errcode != 0)
-	return -pte_nomap;
+	result = -pte_nomap;
     }
   CATCH (error, RETURN_MASK_ERROR)
     {
-      return -pte_nomap;
+      result = -pte_nomap;
     }
   END_CATCH
 
-  return size;
+  return result;
 }
 
 /* Translate the vendor from one enum to another.  */
@@ -878,7 +894,8 @@ static void btrace_finalize_ftrace_pt (struct pt_insn_decoder *decoder,
   btrace_add_pc (tp);
 }
 
-/* Compute the function branch trace from Intel(R) Processor Trace.  */
+/* Compute the function branch trace from Intel Processor Trace
+   format.  */
 
 static void
 btrace_compute_ftrace_pt (struct thread_info *tp,
@@ -906,12 +923,12 @@ btrace_compute_ftrace_pt (struct thread_info *tp,
 
   errcode = pt_cpu_errata (&config.errata, &config.cpu);
   if (errcode < 0)
-    error (_("Failed to configure the Intel(R) Processor Trace decoder: %s."),
+    error (_("Failed to configure the Intel Processor Trace decoder: %s."),
 	   pt_errstr (pt_errcode (errcode)));
 
   decoder = pt_insn_alloc_decoder (&config);
   if (decoder == NULL)
-    error (_("Failed to allocate the Intel(R) Processor Trace decoder."));
+    error (_("Failed to allocate the Intel Processor Trace decoder."));
 
   TRY
     {
@@ -919,11 +936,11 @@ btrace_compute_ftrace_pt (struct thread_info *tp,
 
       image = pt_insn_get_image(decoder);
       if (image == NULL)
-	error (_("Failed to configure the Intel(R) Processor Trace decoder."));
+	error (_("Failed to configure the Intel Processor Trace decoder."));
 
       errcode = pt_image_set_callback(image, btrace_pt_readmem_callback, NULL);
       if (errcode < 0)
-	error (_("Failed to configure the Intel(R) Processor Trace decoder: "
+	error (_("Failed to configure the Intel Processor Trace decoder: "
 		 "%s."), pt_errstr (pt_errcode (errcode)));
 
       ftrace_add_pt (decoder, &btinfo->begin, &btinfo->end, &level,
@@ -1020,10 +1037,16 @@ btrace_enable (struct thread_info *tp, const struct btrace_config *conf)
   if (tp->btrace.target != NULL)
     return;
 
+#if !defined (HAVE_LIBIPT)
+  if (conf->format == BTRACE_FORMAT_PT)
+    error (_("GDB does not support Intel Processor Trace."));
+#endif /* !defined (HAVE_LIBIPT) */
+
   if (!target_supports_btrace (conf->format))
     error (_("Target does not support branch tracing."));
 
-  DEBUG ("enable thread %d (%s)", tp->num, target_pid_to_str (tp->ptid));
+  DEBUG ("enable thread %s (%s)", print_thread_id (tp),
+	 target_pid_to_str (tp->ptid));
 
   tp->btrace.target = target_enable_btrace (tp->ptid, conf);
 
@@ -1055,7 +1078,8 @@ btrace_disable (struct thread_info *tp)
   if (btp->target == NULL)
     return;
 
-  DEBUG ("disable thread %d (%s)", tp->num, target_pid_to_str (tp->ptid));
+  DEBUG ("disable thread %s (%s)", print_thread_id (tp),
+	 target_pid_to_str (tp->ptid));
 
   target_disable_btrace (btp->target);
   btp->target = NULL;
@@ -1074,7 +1098,8 @@ btrace_teardown (struct thread_info *tp)
   if (btp->target == NULL)
     return;
 
-  DEBUG ("teardown thread %d (%s)", tp->num, target_pid_to_str (tp->ptid));
+  DEBUG ("teardown thread %s (%s)", print_thread_id (tp),
+	 target_pid_to_str (tp->ptid));
 
   target_teardown_btrace (btp->target);
   btp->target = NULL;
@@ -1248,7 +1273,8 @@ btrace_fetch (struct thread_info *tp)
   struct cleanup *cleanup;
   int errcode;
 
-  DEBUG ("fetch thread %d (%s)", tp->num, target_pid_to_str (tp->ptid));
+  DEBUG ("fetch thread %s (%s)", print_thread_id (tp),
+	 target_pid_to_str (tp->ptid));
 
   btinfo = &tp->btrace;
   tinfo = btinfo->target;
@@ -1320,7 +1346,8 @@ btrace_clear (struct thread_info *tp)
   struct btrace_thread_info *btinfo;
   struct btrace_function *it, *trash;
 
-  DEBUG ("clear thread %d (%s)", tp->num, target_pid_to_str (tp->ptid));
+  DEBUG ("clear thread %s (%s)", print_thread_id (tp),
+	 target_pid_to_str (tp->ptid));
 
   /* Make sure btrace frames that may hold a pointer into the branch
      trace data are destroyed.  */
@@ -1369,7 +1396,8 @@ check_xml_btrace_version (struct gdb_xml_parser *parser,
 			  const struct gdb_xml_element *element,
 			  void *user_data, VEC (gdb_xml_value_s) *attributes)
 {
-  const char *version = xml_find_attribute (attributes, "version")->value;
+  const char *version
+    = (const char *) xml_find_attribute (attributes, "version")->value;
 
   if (strcmp (version, "1.0") != 0)
     gdb_xml_error (parser, _("Unsupported btrace version: \"%s\""), version);
@@ -1386,7 +1414,7 @@ parse_xml_btrace_block (struct gdb_xml_parser *parser,
   struct btrace_block *block;
   ULONGEST *begin, *end;
 
-  btrace = user_data;
+  btrace = (struct btrace_data *) user_data;
 
   switch (btrace->format)
     {
@@ -1402,8 +1430,8 @@ parse_xml_btrace_block (struct gdb_xml_parser *parser,
       gdb_xml_error (parser, _("Btrace format error."));
     }
 
-  begin = xml_find_attribute (attributes, "begin")->value;
-  end = xml_find_attribute (attributes, "end")->value;
+  begin = (ULONGEST *) xml_find_attribute (attributes, "begin")->value;
+  end = (ULONGEST *) xml_find_attribute (attributes, "end")->value;
 
   block = VEC_safe_push (btrace_block_s, btrace->variant.bts.blocks, NULL);
   block->begin = *begin;
@@ -1426,7 +1454,7 @@ parse_xml_raw (struct gdb_xml_parser *parser, const char *body_text,
 
   size = len / 2;
 
-  bin = data = xmalloc (size);
+  bin = data = (gdb_byte *) xmalloc (size);
   cleanup = make_cleanup (xfree, data);
 
   /* We use hex encoding - see common/rsp-low.h.  */
@@ -1462,12 +1490,12 @@ parse_xml_btrace_pt_config_cpu (struct gdb_xml_parser *parser,
   const char *vendor;
   ULONGEST *family, *model, *stepping;
 
-  vendor = xml_find_attribute (attributes, "vendor")->value;
-  family = xml_find_attribute (attributes, "family")->value;
-  model = xml_find_attribute (attributes, "model")->value;
-  stepping = xml_find_attribute (attributes, "stepping")->value;
+  vendor = (const char *) xml_find_attribute (attributes, "vendor")->value;
+  family = (ULONGEST *) xml_find_attribute (attributes, "family")->value;
+  model = (ULONGEST *) xml_find_attribute (attributes, "model")->value;
+  stepping = (ULONGEST *) xml_find_attribute (attributes, "stepping")->value;
 
-  btrace = user_data;
+  btrace = (struct btrace_data *) user_data;
 
   if (strcmp (vendor, "GenuineIntel") == 0)
     btrace->variant.pt.config.cpu.vendor = CV_INTEL;
@@ -1486,7 +1514,7 @@ parse_xml_btrace_pt_raw (struct gdb_xml_parser *parser,
 {
   struct btrace_data *btrace;
 
-  btrace = user_data;
+  btrace = (struct btrace_data *) user_data;
   parse_xml_raw (parser, body_text, &btrace->variant.pt.data,
 		 &btrace->variant.pt.size);
 }
@@ -1500,7 +1528,7 @@ parse_xml_btrace_pt (struct gdb_xml_parser *parser,
 {
   struct btrace_data *btrace;
 
-  btrace = user_data;
+  btrace = (struct btrace_data *) user_data;
   btrace->format = BTRACE_FORMAT_PT;
   btrace->variant.pt.config.cpu.vendor = CV_UNKNOWN;
   btrace->variant.pt.data = NULL;
@@ -1595,7 +1623,7 @@ parse_xml_btrace_conf_bts (struct gdb_xml_parser *parser,
   struct btrace_config *conf;
   struct gdb_xml_value *size;
 
-  conf = user_data;
+  conf = (struct btrace_config *) user_data;
   conf->format = BTRACE_FORMAT_BTS;
   conf->bts.size = 0;
 
@@ -1614,7 +1642,7 @@ parse_xml_btrace_conf_pt (struct gdb_xml_parser *parser,
   struct btrace_config *conf;
   struct gdb_xml_value *size;
 
-  conf = user_data;
+  conf = (struct btrace_config *) user_data;
   conf->format = BTRACE_FORMAT_PT;
   conf->pt.size = 0;
 
@@ -2181,7 +2209,7 @@ btrace_set_insn_history (struct btrace_thread_info *btinfo,
 			 const struct btrace_insn_iterator *end)
 {
   if (btinfo->insn_history == NULL)
-    btinfo->insn_history = xzalloc (sizeof (*btinfo->insn_history));
+    btinfo->insn_history = XCNEW (struct btrace_insn_history);
 
   btinfo->insn_history->begin = *begin;
   btinfo->insn_history->end = *end;
@@ -2197,7 +2225,7 @@ btrace_set_call_history (struct btrace_thread_info *btinfo,
   gdb_assert (begin->btinfo == end->btinfo);
 
   if (btinfo->call_history == NULL)
-    btinfo->call_history = xzalloc (sizeof (*btinfo->call_history));
+    btinfo->call_history = XCNEW (struct btrace_call_history);
 
   btinfo->call_history->begin = *begin;
   btinfo->call_history->end = *end;
@@ -2235,7 +2263,7 @@ btrace_is_empty (struct thread_info *tp)
 static void
 do_btrace_data_cleanup (void *arg)
 {
-  btrace_data_fini (arg);
+  btrace_data_fini ((struct btrace_data *) arg);
 }
 
 /* See btrace.h.  */
@@ -2421,7 +2449,7 @@ btrace_maint_decode_pt (struct btrace_maint_info *maint,
     }
 
   if (errcode != -pte_eos)
-    warning (_("Failed to synchronize onto the Intel(R) Processor Trace "
+    warning (_("Failed to synchronize onto the Intel Processor Trace "
 	       "stream: %s."), pt_errstr (pt_errcode (errcode)));
 }
 
@@ -2455,12 +2483,12 @@ btrace_maint_update_pt_packets (struct btrace_thread_info *btinfo)
 
   errcode = pt_cpu_errata (&config.errata, &config.cpu);
   if (errcode < 0)
-    error (_("Failed to configure the Intel(R) Processor Trace decoder: %s."),
+    error (_("Failed to configure the Intel Processor Trace decoder: %s."),
 	   pt_errstr (pt_errcode (errcode)));
 
   decoder = pt_pkt_alloc_decoder (&config);
   if (decoder == NULL)
-    error (_("Failed to allocate the Intel(R) Processor Trace decoder."));
+    error (_("Failed to allocate the Intel Processor Trace decoder."));
 
   TRY
     {
@@ -2911,7 +2939,7 @@ Set branch tracing specific variables."),
                   0, &maintenance_set_cmdlist);
 
   add_prefix_cmd ("pt", class_maintenance, maint_btrace_pt_set_cmd, _("\
-Set Intel(R) Processor Trace specific variables."),
+Set Intel Processor Trace specific variables."),
                   &maint_btrace_pt_set_cmdlist, "maintenance set btrace pt ",
                   0, &maint_btrace_set_cmdlist);
 
@@ -2921,7 +2949,7 @@ Show branch tracing specific variables."),
                   0, &maintenance_show_cmdlist);
 
   add_prefix_cmd ("pt", class_maintenance, maint_btrace_pt_show_cmd, _("\
-Show Intel(R) Processor Trace specific variables."),
+Show Intel Processor Trace specific variables."),
                   &maint_btrace_pt_show_cmdlist, "maintenance show btrace pt ",
                   0, &maint_btrace_show_cmdlist);
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Free Software Foundation, Inc.
+# Copyright (C) 2015-2016 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ def select_file(file_name):
     N.B. This turns confirmation off.
     """
     safe_execute("set confirm off")
+    safe_execute("kill")
     print ("Selecting file %s" % (file_name))
     if file_name is None:
         gdb.execute("file")

@@ -1,6 +1,6 @@
 /* Modula 2 language support routines for GDB, the GNU debugger.
 
-   Copyright (C) 1992-2015 Free Software Foundation, Inc.
+   Copyright (C) 1992-2016 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -363,9 +363,10 @@ const struct language_defn m2_language_defn =
   case_sensitive_on,
   array_row_major,
   macro_expansion_no,
+  NULL,
   &exp_descriptor_modula2,
   m2_parse,			/* parser */
-  m2_error,			/* parser error function */
+  m2_yyerror,			/* parser error function */
   null_post_parser,
   m2_printchar,			/* Print character constant */
   m2_printstr,			/* function to print string constant */
@@ -380,6 +381,7 @@ const struct language_defn m2_language_defn =
   basic_lookup_symbol_nonlocal,	/* lookup_symbol_nonlocal */
   basic_lookup_transparent_type,/* lookup_transparent_type */
   NULL,				/* Language specific symbol demangler */
+  NULL,
   NULL,				/* Language specific
 				   class_name_from_physname */
   m2_op_print_tab,		/* expression operators for printing */
@@ -425,7 +427,7 @@ static struct gdbarch_data *m2_type_data;
 const struct builtin_m2_type *
 builtin_m2_type (struct gdbarch *gdbarch)
 {
-  return gdbarch_data (gdbarch, m2_type_data);
+  return (const struct builtin_m2_type *) gdbarch_data (gdbarch, m2_type_data);
 }
 
 

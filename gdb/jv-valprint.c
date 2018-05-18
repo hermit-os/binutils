@@ -1,6 +1,6 @@
 /* Support for printing Java values for GDB, the GNU debugger.
 
-   Copyright (C) 1997-2015 Free Software Foundation, Inc.
+   Copyright (C) 1997-2016 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -99,7 +99,8 @@ java_value_print (struct value *val, struct ui_file *stream,
 	    {
 	      gdb_byte *buf;
 
-	      buf = alloca (gdbarch_ptr_bit (gdbarch) / HOST_CHAR_BIT);
+	      buf = ((gdb_byte *)
+		     alloca (gdbarch_ptr_bit (gdbarch) / HOST_CHAR_BIT));
 	      fputs_filtered (", ", stream);
 	      wrap_here (n_spaces (2));
 
@@ -265,7 +266,7 @@ java_value_print (struct value *val, struct ui_file *stream,
 
 static void
 java_print_value_fields (struct type *type, const gdb_byte *valaddr,
-			 int offset,
+			 LONGEST offset,
 			 CORE_ADDR address, struct ui_file *stream,
 			 int recurse,
 			 const struct value *val,

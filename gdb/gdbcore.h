@@ -1,6 +1,6 @@
 /* Machine independent variables that describe the core file under GDB.
 
-   Copyright (C) 1986-2015 Free Software Foundation, Inc.
+   Copyright (C) 1986-2016 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -76,6 +76,9 @@ extern int safe_read_memory_integer (CORE_ADDR memaddr, int len,
 extern ULONGEST read_memory_unsigned_integer (CORE_ADDR memaddr,
 					      int len,
 					      enum bfd_endian byte_order);
+extern int safe_read_memory_unsigned_integer (CORE_ADDR memaddr, int len,
+					      enum bfd_endian byte_order,
+					      ULONGEST *return_value);
 
 /* Read an integer from debugged code memory, given address,
    number of bytes, and byte order for code.  */

@@ -1,6 +1,6 @@
 /* MI Command Set.
 
-   Copyright (C) 2000-2015 Free Software Foundation, Inc.
+   Copyright (C) 2000-2016 Free Software Foundation, Inc.
 
    Contributed by Cygnus Solutions (a Red Hat company).
 
@@ -55,7 +55,7 @@
 #include "gdbcmd.h"
 
 #include <ctype.h>
-#include <sys/time.h>
+#include "gdb_sys_time.h"
 
 #if defined HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
@@ -71,8 +71,6 @@ enum
   };
 
 int mi_debug_p;
-
-struct ui_file *raw_stdout;
 
 /* This is used to pass the current command timestamp down to
    continuation routines.  */
@@ -149,18 +147,21 @@ mi_async_p (void)
 
 static void timestamp (struct mi_timestamp *tv);
 
-static void print_diff_now (struct mi_timestamp *start);
-static void print_diff (struct mi_timestamp *start, struct mi_timestamp *end);
+static void print_diff (struct ui_file *file, struct mi_timestamp *start,
+			struct mi_timestamp *end);
 
 void
 mi_cmd_gdb_exit (char *command, char **argv, int argc)
 {
+  struct mi_interp *mi
+    = (struct mi_interp *) interp_data (current_interpreter ());
+
   /* We have to print everything right here because we never return.  */
   if (current_token)
-    fputs_unfiltered (current_token, raw_stdout);
-  fputs_unfiltered ("^exit\n", raw_stdout);
-  mi_out_put (current_uiout, raw_stdout);
-  gdb_flush (raw_stdout);
+    fputs_unfiltered (current_token, mi->raw_stdout);
+  fputs_unfiltered ("^exit\n", mi->raw_stdout);
+  mi_out_put (current_uiout, mi->raw_stdout);
+  gdb_flush (mi->raw_stdout);
   /* FIXME: The function called is not yet a formal libgdb function.  */
   quit_force (NULL, FROM_TTY);
 }
@@ -415,6 +416,8 @@ run_one_inferior (struct inferior *inf, void *arg)
 {
   int start_p = *(int *) arg;
   const char *run_cmd = start_p ? "start" : "run";
+  struct target_ops *run_target = find_run_target ();
+  int async_p = mi_async && run_target->to_can_async_p (run_target);
 
   if (inf->pid != 0)
     {
@@ -435,15 +438,14 @@ run_one_inferior (struct inferior *inf, void *arg)
       switch_to_thread (null_ptid);
       set_current_program_space (inf->pspace);
     }
-  mi_execute_cli_command (run_cmd, mi_async_p (),
-			  mi_async_p () ? "&" : NULL);
+  mi_execute_cli_command (run_cmd, async_p,
+			  async_p ? "&" : NULL);
   return 0;
 }
 
 void
 mi_cmd_exec_run (char *command, char **argv, int argc)
 {
-  int i;
   int start_p = 0;
 
   /* Parse the command options.  */
@@ -489,9 +491,11 @@ mi_cmd_exec_run (char *command, char **argv, int argc)
   else
     {
       const char *run_cmd = start_p ? "start" : "run";
+      struct target_ops *run_target = find_run_target ();
+      int async_p = mi_async && run_target->to_can_async_p (run_target);
 
-      mi_execute_cli_command (run_cmd, mi_async_p (),
-			      mi_async_p () ? "&" : NULL);
+      mi_execute_cli_command (run_cmd, async_p,
+			      async_p ? "&" : NULL);
     }
 }
 
@@ -610,7 +614,7 @@ struct collect_cores_data
 static int
 collect_cores (struct thread_info *ti, void *xdata)
 {
-  struct collect_cores_data *data = xdata;
+  struct collect_cores_data *data = (struct collect_cores_data *) xdata;
 
   if (ptid_get_pid (ti->ptid) == data->pid)
     {
@@ -643,7 +647,8 @@ struct print_one_inferior_data
 static int
 print_one_inferior (struct inferior *inferior, void *xdata)
 {
-  struct print_one_inferior_data *top_data = xdata;
+  struct print_one_inferior_data *top_data
+    = (struct print_one_inferior_data *) xdata;
   struct ui_out *uiout = current_uiout;
 
   if (VEC_empty (int, top_data->inferiors)
@@ -728,7 +733,7 @@ output_cores (struct ui_out *uiout, const char *field_name, const char *xcores)
 static void
 free_vector_of_ints (void *xvector)
 {
-  VEC (int) **vector = xvector;
+  VEC (int) **vector = (VEC (int) **) xvector;
 
   VEC_free (int, *vector);
 }
@@ -759,7 +764,7 @@ splay_tree_int_comparator (splay_tree_key xa, splay_tree_key xb)
 static void
 free_splay_tree (void *xt)
 {
-  splay_tree t = xt;
+  splay_tree t = (splay_tree) xt;
   splay_tree_delete (t);
 }
 
@@ -1249,7 +1254,6 @@ static void
 output_register (struct frame_info *frame, int regnum, int format,
 		 int skip_unavailable)
 {
-  struct gdbarch *gdbarch = get_frame_arch (frame);
   struct ui_out *uiout = current_uiout;
   struct value *val = value_of_register (regnum, frame);
   struct cleanup *tuple_cleanup;
@@ -1493,7 +1497,7 @@ mi_cmd_data_read_memory (char *command, char **argv, int argc)
 
   /* Create a buffer and read it in.  */
   total_bytes = word_size * nr_rows * nr_cols;
-  mbuf = xcalloc (total_bytes, 1);
+  mbuf = XCNEWVEC (gdb_byte, total_bytes);
   make_cleanup (xfree, mbuf);
 
   /* Dispatch memory reads to the topmost target, not the flattened
@@ -1645,14 +1649,15 @@ mi_cmd_data_read_memory_bytes (char *command, char **argv, int argc)
       struct cleanup *t = make_cleanup_ui_out_tuple_begin_end (uiout, NULL);
       char *data, *p;
       int i;
+      int alloc_len;
 
       ui_out_field_core_addr (uiout, "begin", gdbarch, read_result->begin);
       ui_out_field_core_addr (uiout, "offset", gdbarch, read_result->begin
 			      - addr);
       ui_out_field_core_addr (uiout, "end", gdbarch, read_result->end);
 
-      data = xmalloc (
-	  (read_result->end - read_result->begin) * 2 * unit_size + 1);
+      alloc_len = (read_result->end - read_result->begin) * 2 * unit_size + 1;
+      data = (char *) xmalloc (alloc_len);
 
       for (i = 0, p = data;
 	   i < ((read_result->end - read_result->begin) * unit_size);
@@ -1694,7 +1699,7 @@ mi_cmd_data_write_memory (char *command, char **argv, int argc)
   /* FIXME: ezannoni 2000-02-17 LONGEST could possibly not be big
      enough when using a compiler other than GCC.  */
   LONGEST value;
-  void *buffer;
+  gdb_byte *buffer;
   struct cleanup *old_chain;
   long offset = 0;
   int oind = 0;
@@ -1742,7 +1747,7 @@ mi_cmd_data_write_memory (char *command, char **argv, int argc)
   /* Get the value as a number.  */
   value = parse_and_eval_address (argv[3]);
   /* Get the value into an array.  */
-  buffer = xmalloc (word_size);
+  buffer = (gdb_byte *) xmalloc (word_size);
   old_chain = make_cleanup (xfree, buffer);
   store_signed_integer (buffer, word_size, byte_order, value);
   /* Write it down to memory.  */
@@ -1790,7 +1795,7 @@ mi_cmd_data_write_memory_bytes (char *command, char **argv, int argc)
   else
     count_units = len_units;
 
-  databuf = xmalloc (len_bytes * sizeof (gdb_byte));
+  databuf = XNEWVEC (gdb_byte, len_bytes);
   back_to = make_cleanup (xfree, databuf);
 
   for (i = 0; i < len_bytes; ++i)
@@ -1805,7 +1810,7 @@ mi_cmd_data_write_memory_bytes (char *command, char **argv, int argc)
     {
       /* Pattern is made of less units than count:
          repeat pattern to fill memory.  */
-      data = xmalloc (count_units * unit_size);
+      data = (gdb_byte *) xmalloc (count_units * unit_size);
       make_cleanup (xfree, data);
 
       /* Number of times the pattern is entirely repeated.  */
@@ -1979,6 +1984,7 @@ mi_cmd_remove_inferior (char *command, char **argv, int argc)
 static void
 captured_mi_execute_command (struct ui_out *uiout, struct mi_parse *context)
 {
+  struct mi_interp *mi = (struct mi_interp *) interp_data (command_interp ());
   struct cleanup *cleanup;
 
   if (do_timings)
@@ -1995,7 +2001,8 @@ captured_mi_execute_command (struct ui_out *uiout, struct mi_parse *context)
       /* A MI command was read from the input stream.  */
       if (mi_debug_p)
 	/* FIXME: gdb_???? */
-	fprintf_unfiltered (raw_stdout, " token=`%s' command=`%s' args=`%s'\n",
+	fprintf_unfiltered (mi->raw_stdout,
+			    " token=`%s' command=`%s' args=`%s'\n",
 			    context->token, context->command, context->args);
 
       mi_cmd_execute (context);
@@ -2008,15 +2015,15 @@ captured_mi_execute_command (struct ui_out *uiout, struct mi_parse *context)
 	 uiout will most likely crash in the mi_out_* routines.  */
       if (!running_result_record_printed)
 	{
-	  fputs_unfiltered (context->token, raw_stdout);
+	  fputs_unfiltered (context->token, mi->raw_stdout);
 	  /* There's no particularly good reason why target-connect results
 	     in not ^done.  Should kill ^connected for MI3.  */
 	  fputs_unfiltered (strcmp (context->command, "target-select") == 0
-			    ? "^connected" : "^done", raw_stdout);
-	  mi_out_put (uiout, raw_stdout);
+			    ? "^connected" : "^done", mi->raw_stdout);
+	  mi_out_put (uiout, mi->raw_stdout);
 	  mi_out_rewind (uiout);
-	  mi_print_timing_maybe ();
-	  fputs_unfiltered ("\n", raw_stdout);
+	  mi_print_timing_maybe (mi->raw_stdout);
+	  fputs_unfiltered ("\n", mi->raw_stdout);
 	}
       else
 	/* The command does not want anything to be printed.  In that
@@ -2035,7 +2042,7 @@ captured_mi_execute_command (struct ui_out *uiout, struct mi_parse *context)
 	/* Echo the command on the console.  */
 	fprintf_unfiltered (gdb_stdlog, "%s\n", context->command);
 	/* Call the "console" interpreter.  */
-	argv[0] = "console";
+	argv[0] = INTERP_CONSOLE;
 	argv[1] = context->command;
 	mi_cmd_interpreter_exec ("-interpreter-exec", argv, 2);
 
@@ -2047,12 +2054,12 @@ captured_mi_execute_command (struct ui_out *uiout, struct mi_parse *context)
 	  {
 	    if (!running_result_record_printed)
 	      {
-		fputs_unfiltered (context->token, raw_stdout);
-		fputs_unfiltered ("^done", raw_stdout);
-		mi_out_put (uiout, raw_stdout);
+		fputs_unfiltered (context->token, mi->raw_stdout);
+		fputs_unfiltered ("^done", mi->raw_stdout);
+		mi_out_put (uiout, mi->raw_stdout);
 		mi_out_rewind (uiout);
-		mi_print_timing_maybe ();
-		fputs_unfiltered ("\n", raw_stdout);
+		mi_print_timing_maybe (mi->raw_stdout);
+		fputs_unfiltered ("\n", mi->raw_stdout);
 	      }
 	    else
 	      mi_out_rewind (uiout);
@@ -2069,22 +2076,25 @@ captured_mi_execute_command (struct ui_out *uiout, struct mi_parse *context)
 static void
 mi_print_exception (const char *token, struct gdb_exception exception)
 {
-  fputs_unfiltered (token, raw_stdout);
-  fputs_unfiltered ("^error,msg=\"", raw_stdout);
+  struct mi_interp *mi
+    = (struct mi_interp *) interp_data (current_interpreter ());
+
+  fputs_unfiltered (token, mi->raw_stdout);
+  fputs_unfiltered ("^error,msg=\"", mi->raw_stdout);
   if (exception.message == NULL)
-    fputs_unfiltered ("unknown error", raw_stdout);
+    fputs_unfiltered ("unknown error", mi->raw_stdout);
   else
-    fputstr_unfiltered (exception.message, '"', raw_stdout);
-  fputs_unfiltered ("\"", raw_stdout);
+    fputstr_unfiltered (exception.message, '"', mi->raw_stdout);
+  fputs_unfiltered ("\"", mi->raw_stdout);
 
   switch (exception.error)
     {
       case UNDEFINED_COMMAND_ERROR:
-	fputs_unfiltered (",code=\"undefined-command\"", raw_stdout);
+	fputs_unfiltered (",code=\"undefined-command\"", mi->raw_stdout);
 	break;
     }
 
-  fputs_unfiltered ("\n", raw_stdout);
+  fputs_unfiltered ("\n", mi->raw_stdout);
 }
 
 void
@@ -2119,8 +2129,7 @@ mi_execute_command (const char *cmd, int from_tty)
 
       if (do_timings)
 	{
-	  command->cmd_start = (struct mi_timestamp *)
-	    xmalloc (sizeof (struct mi_timestamp));
+	  command->cmd_start = XNEW (struct mi_timestamp);
 	  timestamp (command->cmd_start);
 	}
 
@@ -2150,7 +2159,8 @@ mi_execute_command (const char *cmd, int from_tty)
 	     =thread-selected is supposed to indicate user's intentions.  */
 	  && strcmp (command->command, "thread-select") != 0)
 	{
-	  struct mi_interp *mi = top_level_interpreter_data ();
+	  struct mi_interp *mi
+	    = (struct mi_interp *) top_level_interpreter_data ();
 	  int report_change = 0;
 
 	  if (command->thread == -1)
@@ -2163,18 +2173,23 @@ mi_execute_command (const char *cmd, int from_tty)
 	    {
 	      struct thread_info *ti = inferior_thread ();
 
-	      report_change = (ti->num != command->thread);
+	      report_change = (ti->global_num != command->thread);
 	    }
 
 	  if (report_change)
 	    {
 	      struct thread_info *ti = inferior_thread ();
+	      struct cleanup *old_chain;
 
-	      target_terminal_ours ();
+	      old_chain = make_cleanup_restore_target_terminal ();
+	      target_terminal_ours_for_output ();
+
 	      fprintf_unfiltered (mi->event_channel,
 				  "thread-selected,id=\"%d\"",
-				  ti->num);
+				  ti->global_num);
 	      gdb_flush (mi->event_channel);
+
+	      do_cleanups (old_chain);
 	    }
 	}
 
@@ -2186,7 +2201,6 @@ static void
 mi_cmd_execute (struct mi_parse *parse)
 {
   struct cleanup *cleanup;
-  enum language saved_language;
 
   cleanup = prepare_execute_command ();
 
@@ -2224,7 +2238,7 @@ mi_cmd_execute (struct mi_parse *parse)
 
   if (parse->thread != -1)
     {
-      struct thread_info *tp = find_thread_id (parse->thread);
+      struct thread_info *tp = find_thread_global_id (parse->thread);
 
       if (!tp)
 	error (_("Invalid thread id: %d"), parse->thread);
@@ -2350,6 +2364,8 @@ mi_load_progress (const char *section_name,
   int new_section;
   struct ui_out *saved_uiout;
   struct ui_out *uiout;
+  struct mi_interp *mi
+    = (struct mi_interp *) interp_data (current_interpreter ());
 
   /* This function is called through deprecated_show_load_progress
      which means uiout may not be correct.  Fix it for the duration
@@ -2391,16 +2407,16 @@ mi_load_progress (const char *section_name,
       previous_sect_name = xstrdup (section_name);
 
       if (current_token)
-	fputs_unfiltered (current_token, raw_stdout);
-      fputs_unfiltered ("+download", raw_stdout);
+	fputs_unfiltered (current_token, mi->raw_stdout);
+      fputs_unfiltered ("+download", mi->raw_stdout);
       cleanup_tuple = make_cleanup_ui_out_tuple_begin_end (uiout, NULL);
       ui_out_field_string (uiout, "section", section_name);
       ui_out_field_int (uiout, "section-size", total_section);
       ui_out_field_int (uiout, "total-size", grand_total);
       do_cleanups (cleanup_tuple);
-      mi_out_put (uiout, raw_stdout);
-      fputs_unfiltered ("\n", raw_stdout);
-      gdb_flush (raw_stdout);
+      mi_out_put (uiout, mi->raw_stdout);
+      fputs_unfiltered ("\n", mi->raw_stdout);
+      gdb_flush (mi->raw_stdout);
     }
 
   if (delta.tv_sec >= update_threshold.tv_sec &&
@@ -2411,8 +2427,8 @@ mi_load_progress (const char *section_name,
       last_update.tv_sec = time_now.tv_sec;
       last_update.tv_usec = time_now.tv_usec;
       if (current_token)
-	fputs_unfiltered (current_token, raw_stdout);
-      fputs_unfiltered ("+download", raw_stdout);
+	fputs_unfiltered (current_token, mi->raw_stdout);
+      fputs_unfiltered ("+download", mi->raw_stdout);
       cleanup_tuple = make_cleanup_ui_out_tuple_begin_end (uiout, NULL);
       ui_out_field_string (uiout, "section", section_name);
       ui_out_field_int (uiout, "section-sent", sent_so_far);
@@ -2420,9 +2436,9 @@ mi_load_progress (const char *section_name,
       ui_out_field_int (uiout, "total-sent", total_sent);
       ui_out_field_int (uiout, "total-size", grand_total);
       do_cleanups (cleanup_tuple);
-      mi_out_put (uiout, raw_stdout);
-      fputs_unfiltered ("\n", raw_stdout);
-      gdb_flush (raw_stdout);
+      mi_out_put (uiout, mi->raw_stdout);
+      fputs_unfiltered ("\n", mi->raw_stdout);
+      gdb_flush (mi->raw_stdout);
     }
 
   xfree (uiout);
@@ -2452,21 +2468,21 @@ timestamp (struct mi_timestamp *tv)
 }
 
 static void
-print_diff_now (struct mi_timestamp *start)
+print_diff_now (struct ui_file *file, struct mi_timestamp *start)
 {
   struct mi_timestamp now;
 
   timestamp (&now);
-  print_diff (start, &now);
+  print_diff (file, start, &now);
 }
 
 void
-mi_print_timing_maybe (void)
+mi_print_timing_maybe (struct ui_file *file)
 {
   /* If the command is -enable-timing then do_timings may be true
      whilst current_command_ts is not initialized.  */
   if (do_timings && current_command_ts)
-    print_diff_now (current_command_ts);
+    print_diff_now (file, current_command_ts);
 }
 
 static long
@@ -2477,10 +2493,11 @@ timeval_diff (struct timeval start, struct timeval end)
 }
 
 static void
-print_diff (struct mi_timestamp *start, struct mi_timestamp *end)
+print_diff (struct ui_file *file, struct mi_timestamp *start,
+	    struct mi_timestamp *end)
 {
   fprintf_unfiltered
-    (raw_stdout,
+    (file,
      ",time={wallclock=\"%0.5f\",user=\"%0.5f\",system=\"%0.5f\"}",
      timeval_diff (start->wallclock, end->wallclock) / 1000000.0,
      timeval_diff (start->utime, end->utime) / 1000000.0,
@@ -2490,7 +2507,6 @@ print_diff (struct mi_timestamp *start, struct mi_timestamp *end)
 void
 mi_cmd_trace_define_variable (char *command, char **argv, int argc)
 {
-  struct expression *expr;
   LONGEST initval = 0;
   struct trace_state_variable *tsv;
   char *name = 0;
@@ -2690,7 +2706,6 @@ print_variable_or_computed (char *expression, enum print_values values)
   struct cleanup *old_chain;
   struct value *val;
   struct ui_file *stb;
-  struct value_print_options opts;
   struct type *type;
   struct ui_out *uiout = current_uiout;
 
@@ -2903,7 +2918,7 @@ mi_cmd_trace_frame_collected (char *command, char **argv, int argc)
 
 	if (tsv != NULL)
 	  {
-	    tsvname = xrealloc (tsvname, strlen (tsv->name) + 2);
+	    tsvname = (char *) xrealloc (tsvname, strlen (tsv->name) + 2);
 	    tsvname[0] = '$';
 	    strcpy (tsvname + 1, tsv->name);
 	    ui_out_field_string (uiout, "name", tsvname);
@@ -2947,7 +2962,7 @@ mi_cmd_trace_frame_collected (char *command, char **argv, int argc)
 	ui_out_field_core_addr (uiout, "address", gdbarch, r->start);
 	ui_out_field_int (uiout, "length", r->length);
 
-	data = xmalloc (r->length);
+	data = (gdb_byte *) xmalloc (r->length);
 	make_cleanup (xfree, data);
 
 	if (memory_contents)
@@ -2957,7 +2972,7 @@ mi_cmd_trace_frame_collected (char *command, char **argv, int argc)
 		int m;
 		char *data_str, *p;
 
-		data_str = xmalloc (r->length * 2 + 1);
+		data_str = (char *) xmalloc (r->length * 2 + 1);
 		make_cleanup (xfree, data_str);
 
 		for (m = 0, p = data_str; m < r->length; ++m, p += 2)

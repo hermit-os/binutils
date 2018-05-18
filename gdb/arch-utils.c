@@ -1,6 +1,6 @@
 /* Dynamic architecture support for GDB, the GNU debugger.
 
-   Copyright (C) 1998-2015 Free Software Foundation, Inc.
+   Copyright (C) 1998-2016 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -44,7 +44,7 @@ simple_displaced_step_copy_insn (struct gdbarch *gdbarch,
                                  struct regcache *regs)
 {
   size_t len = gdbarch_max_insn_length (gdbarch);
-  gdb_byte *buf = xmalloc (len);
+  gdb_byte *buf = (gdb_byte *) xmalloc (len);
 
   read_memory (from, buf, len);
   write_memory (to, buf, len);
@@ -130,6 +130,13 @@ int
 generic_stack_frame_destroyed_p (struct gdbarch *gdbarch, CORE_ADDR pc)
 {
   return 0;
+}
+
+int
+default_code_of_frame_writable (struct gdbarch *gdbarch,
+				struct frame_info *frame)
+{
+  return 1;
 }
 
 /* Helper functions for gdbarch_inner_than */
@@ -684,7 +691,7 @@ initialize_current_architecture (void)
     /* Append ``auto''.  */
     int nr;
     for (nr = 0; arches[nr] != NULL; nr++);
-    arches = xrealloc (arches, sizeof (char*) * (nr + 2));
+    arches = XRESIZEVEC (const char *, arches, nr + 2);
     arches[nr + 0] = "auto";
     arches[nr + 1] = NULL;
     add_setshow_enum_cmd ("architecture", class_support,
@@ -895,6 +902,29 @@ int
 default_addressable_memory_unit_size (struct gdbarch *gdbarch)
 {
   return 1;
+}
+
+void
+default_guess_tracepoint_registers (struct gdbarch *gdbarch,
+				    struct regcache *regcache,
+				    CORE_ADDR addr)
+{
+  int pc_regno = gdbarch_pc_regnum (gdbarch);
+  gdb_byte *regs;
+
+  /* This guessing code below only works if the PC register isn't
+     a pseudo-register.  The value of a pseudo-register isn't stored
+     in the (non-readonly) regcache -- instead it's recomputed
+     (probably from some other cached raw register) whenever the
+     register is read.  In this case, a custom method implementation
+     should be used by the architecture.  */
+  if (pc_regno < 0 || pc_regno >= gdbarch_num_regs (gdbarch))
+    return;
+
+  regs = (gdb_byte *) alloca (register_size (gdbarch, pc_regno));
+  store_unsigned_integer (regs, register_size (gdbarch, pc_regno),
+			  gdbarch_byte_order (gdbarch), addr);
+  regcache_raw_supply (regcache, pc_regno, regs);
 }
 
 /* -Wmissing-prototypes */

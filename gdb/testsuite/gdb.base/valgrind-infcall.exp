@@ -1,4 +1,4 @@
-# Copyright 2012-2015 Free Software Foundation, Inc.
+# Copyright 2012-2016 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -82,6 +82,11 @@ set board [host_info name]
 unset_board_info fileid
 
 clean_restart $testfile
+
+# Make sure we're disconnected, in case we're testing with the
+# native-extended-gdbserver board, where gdb_start/gdb_load spawn
+# gdbserver and connect to it.
+gdb_test "disconnect" ".*"
 
 gdb_test "$vgdbcmd" " in \\.?_start .*" "target remote for vgdb"
 

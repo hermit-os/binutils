@@ -1,6 +1,6 @@
 /* Support for printing C values for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2015 Free Software Foundation, Inc.
+   Copyright (C) 1986-2016 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -124,7 +124,9 @@ static const struct generic_val_print_decorations c_decorations =
   " * I",
   "true",
   "false",
-  "void"
+  "void",
+  "{",
+  "}"
 };
 
 /* Print a pointer based on the type of its target.
@@ -193,9 +195,9 @@ print_unpacked_pointer (struct type *type, struct type *elttype,
       if (vt_address && options->vtblprint)
 	{
 	  struct value *vt_val;
-	  struct symbol *wsym = (struct symbol *) NULL;
+	  struct symbol *wsym = NULL;
 	  struct type *wtype;
-	  struct block *block = (struct block *) NULL;
+	  struct block *block = NULL;
 	  struct field_of_this_result is_this_fld;
 
 	  if (want_space)
@@ -203,7 +205,7 @@ print_unpacked_pointer (struct type *type, struct type *elttype,
 
 	  if (msymbol.minsym != NULL)
 	    wsym = lookup_symbol (MSYMBOL_LINKAGE_NAME(msymbol.minsym), block,
-				  VAR_DOMAIN, &is_this_fld);
+				  VAR_DOMAIN, &is_this_fld).symbol;
 
 	  if (wsym)
 	    {
@@ -565,7 +567,8 @@ c_value_print (struct value *val, struct ui_file *stream,
 	       const struct value_print_options *options)
 {
   struct type *type, *real_type, *val_type;
-  int full, top, using_enc;
+  int full, using_enc;
+  LONGEST top;
   struct value_print_options opts = *options;
 
   opts.deref_ref = 1;
@@ -611,7 +614,7 @@ c_value_print (struct value *val, struct ui_file *stream,
 	  fprintf_filtered (stream, "(");
 
 	  if (value_entirely_available (val))
- 	    {
+	    {
 	      real_type = value_rtti_indirect_type (val, &full, &top,
 						    &using_enc);
 	      if (real_type)
@@ -623,18 +626,19 @@ c_value_print (struct value *val, struct ui_file *stream,
 		  val = value_from_pointer (real_type,
 					    value_as_address (val) - top);
 
-		  if (is_ref)
-		    {
-		      val = value_ref (value_ind (val));
-		      type = value_type (val);
-		    }
-
 		  /* Note: When we look up RTTI entries, we don't get
 		     any information on const or volatile
 		     attributes.  */
 		}
 	    }
-          type_print (type, "", stream, -1);
+
+	  if (is_ref)
+	    {
+	      val = value_ref (value_ind (val));
+	      type = value_type (val);
+	    }
+
+	  type_print (type, "", stream, -1);
 	  fprintf_filtered (stream, ") ");
 	  val_type = type;
 	}
