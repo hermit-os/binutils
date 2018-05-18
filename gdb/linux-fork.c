@@ -1,6 +1,6 @@
 /* GNU/Linux native-dependent code for debugging multiple forks.
 
-   Copyright (C) 2005-2016 Free Software Foundation, Inc.
+   Copyright (C) 2005-2018 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -38,9 +38,6 @@
 struct fork_info *fork_list;
 static int highest_fork_num;
 
-/* Prevent warning from -Wmissing-prototypes.  */
-extern void _initialize_linux_fork (void);
-
 /* Fork list data structure:  */
 struct fork_info
 {
@@ -48,8 +45,9 @@ struct fork_info
   ptid_t ptid;
   ptid_t parent_ptid;
   int num;			/* Convenient handle (GDB fork id).  */
-  struct regcache *savedregs;	/* Convenient for info fork, saves
+  readonly_detached_regcache *savedregs;	/* Convenient for info fork, saves
 				   having to actually switch contexts.  */
+  CORE_ADDR pc;
   int clobber_regs;		/* True if we should restore saved regs.  */
   off_t *filepos;		/* Set of open file descriptors' offsets.  */
   int maxfd;
@@ -129,7 +127,7 @@ free_fork (struct fork_info *fp)
   if (fp)
     {
       if (fp->savedregs)
-	regcache_xfree (fp->savedregs);
+	delete fp->savedregs;
       if (fp->filepos)
 	xfree (fp->filepos);
       xfree (fp);
@@ -143,7 +141,7 @@ delete_fork (ptid_t ptid)
 
   fpprev = NULL;
 
-  linux_nat_forget_process (ptid_get_pid (ptid));
+  linux_target->low_forget_process (ptid_get_pid (ptid));
 
   for (fp = fork_list; fp; fpprev = fp, fp = fp->next)
     if (ptid_equal (fp->ptid, ptid))
@@ -248,7 +246,7 @@ call_lseek (int fd, off_t offset, int whence)
 {
   char exp[80];
 
-  snprintf (&exp[0], sizeof (exp), "lseek (%d, %ld, %d)",
+  snprintf (&exp[0], sizeof (exp), "(long) lseek (%d, %ld, %d)",
 	    fd, (long) offset, whence);
   return (off_t) parse_and_eval_long (&exp[0]);
 }
@@ -264,7 +262,7 @@ fork_load_infrun_state (struct fork_info *fp)
   linux_nat_switch_fork (fp->ptid);
 
   if (fp->savedregs && fp->clobber_regs)
-    regcache_cpy (get_current_regcache (), fp->savedregs);
+    get_current_regcache ()->restore (fp->savedregs);
 
   registers_changed ();
   reinit_frame_cache ();
@@ -295,9 +293,10 @@ fork_save_infrun_state (struct fork_info *fp, int clobber_regs)
   DIR *d;
 
   if (fp->savedregs)
-    regcache_xfree (fp->savedregs);
+    delete fp->savedregs;
 
-  fp->savedregs = regcache_dup (get_current_regcache ());
+  fp->savedregs = new readonly_detached_regcache (*get_current_regcache ());
+  fp->pc = regcache_read_pc (get_current_regcache ());
   fp->clobber_regs = clobber_regs;
 
   if (clobber_regs)
@@ -410,7 +409,7 @@ linux_fork_mourn_inferior (void)
    the first available.  */
 
 void
-linux_fork_detach (const char *args, int from_tty)
+linux_fork_detach (int from_tty)
 {
   /* OK, inferior_ptid is the one we are detaching from.  We need to
      delete it from the fork_list, and switch to the next available
@@ -492,7 +491,7 @@ inferior_call_waitpid (ptid_t pptid, int pid)
   argv[2] = value_from_longest (builtin_type (gdbarch)->builtin_int, 0);
   argv[3] = 0;
 
-  retv = call_function_by_hand (waitpid_fn, 3, argv);
+  retv = call_function_by_hand (waitpid_fn, NULL, 3, argv);
   if (value_as_long (retv) < 0)
     goto out;
 
@@ -506,7 +505,7 @@ out:
 /* Fork list <-> user interface.  */
 
 static void
-delete_checkpoint_command (char *args, int from_tty)
+delete_checkpoint_command (const char *args, int from_tty)
 {
   ptid_t ptid, pptid;
   struct fork_info *fi;
@@ -547,7 +546,7 @@ Please switch to another checkpoint before deleting the current one"));
 }
 
 static void
-detach_checkpoint_command (char *args, int from_tty)
+detach_checkpoint_command (const char *args, int from_tty)
 {
   ptid_t ptid;
 
@@ -574,7 +573,7 @@ Please switch to another checkpoint before detaching the current one"));
 /* Print information about currently known checkpoints.  */
 
 static void
-info_checkpoints_command (char *arg, int from_tty)
+info_checkpoints_command (const char *arg, int from_tty)
 {
   struct gdbarch *gdbarch = get_current_arch ();
   struct symtab_and_line sal;
@@ -593,15 +592,11 @@ info_checkpoints_command (char *arg, int from_tty)
 
       printed = fp;
       if (ptid_equal (fp->ptid, inferior_ptid))
-	{
-	  printf_filtered ("* ");
-	  pc = regcache_read_pc (get_current_regcache ());
-	}
+	printf_filtered ("* ");
       else
-	{
-	  printf_filtered ("  ");
-	  pc = regcache_read_pc (fp->savedregs);
-	}
+	printf_filtered ("  ");
+
+      pc = fp->pc;
       printf_filtered ("%d %s", fp->num, target_pid_to_str (fp->ptid));
       if (fp->num == 0)
 	printf_filtered (_(" (main process)"));
@@ -671,7 +666,7 @@ inf_has_multiple_threads (void)
 }
 
 static void
-checkpoint_command (char *args, int from_tty)
+checkpoint_command (const char *args, int from_tty)
 {
   struct objfile *fork_objf;
   struct gdbarch *gdbarch;
@@ -680,7 +675,6 @@ checkpoint_command (char *args, int from_tty)
   struct value *fork_fn = NULL, *ret;
   struct fork_info *fp;
   pid_t retpid;
-  struct cleanup *old_chain;
 
   if (!target_has_execution) 
     error (_("The program is not being run."));
@@ -704,11 +698,13 @@ checkpoint_command (char *args, int from_tty)
   ret = value_from_longest (builtin_type (gdbarch)->builtin_int, 0);
 
   /* Tell linux-nat.c that we're checkpointing this inferior.  */
-  old_chain = make_cleanup_restore_integer (&checkpointing_pid);
-  checkpointing_pid = ptid_get_pid (inferior_ptid);
+  {
+    scoped_restore save_pid
+      = make_scoped_restore (&checkpointing_pid, ptid_get_pid (inferior_ptid));
 
-  ret = call_function_by_hand (fork_fn, 0, &ret);
-  do_cleanups (old_chain);
+    ret = call_function_by_hand (fork_fn, NULL, 0, &ret);
+  }
+
   if (!ret)	/* Probably can't happen.  */
     error (_("checkpoint: call_function_by_hand returned null."));
 
@@ -763,7 +759,7 @@ linux_fork_context (struct fork_info *newfp, int from_tty)
 
 /* Switch inferior process (checkpoint) context, by checkpoint id.  */
 static void
-restart_command (char *args, int from_tty)
+restart_command (const char *args, int from_tty)
 {
   struct fork_info *fp;
 

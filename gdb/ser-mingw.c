@@ -1,6 +1,6 @@
 /* Serial interface for local (hardwired) serial ports on Windows systems
 
-   Copyright (C) 2006-2016 Free Software Foundation, Inc.
+   Copyright (C) 2006-2018 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -30,8 +30,6 @@
 #include <sys/types.h>
 
 #include "command.h"
-
-void _initialize_ser_windows (void);
 
 struct ser_windows_state
 {
@@ -162,8 +160,6 @@ ser_windows_raw (struct serial *scb)
   state.fNull = FALSE;
   state.fAbortOnError = FALSE;
   state.ByteSize = 8;
-
-  scb->current_timeout = 0;
 
   if (SetCommState (h, &state) == 0)
     warning (_("SetCommState failed"));
@@ -865,20 +861,18 @@ pipe_windows_open (struct serial *scb, const char *name)
 {
   struct pipe_state *ps;
   FILE *pex_stderr;
-  char **argv;
   struct cleanup *back_to;
 
   if (name == NULL)
     error_no_arg (_("child command"));
 
-  argv = gdb_buildargv (name);
-  back_to = make_cleanup_freeargv (argv);
+  gdb_argv argv (name);
 
   if (! argv[0] || argv[0][0] == '\0')
     error (_("missing child command"));
 
   ps = make_pipe_state ();
-  make_cleanup (cleanup_pipe_state, ps);
+  back_to = make_cleanup (cleanup_pipe_state, ps);
 
   ps->pex = pex_init (PEX_USE_PIPES, "target remote pipe", NULL);
   if (! ps->pex)
@@ -892,7 +886,7 @@ pipe_windows_open (struct serial *scb, const char *name)
     const char *err_msg
       = pex_run (ps->pex, PEX_SEARCH | PEX_BINARY_INPUT | PEX_BINARY_OUTPUT
 		 | PEX_STDERR_TO_PIPE,
-                 argv[0], argv, NULL, NULL,
+                 argv[0], argv.get (), NULL, NULL,
                  &err);
 
     if (err_msg)
@@ -922,6 +916,7 @@ pipe_windows_open (struct serial *scb, const char *name)
 
   scb->state = (void *) ps;
 
+  argv.release ();
   discard_cleanups (back_to);
   return 0;
 
@@ -1253,7 +1248,6 @@ static const struct serial_ops hardwire_ops =
   ser_base_copy_tty_state,
   ser_base_set_tty_state,
   ser_base_print_tty_state,
-  ser_base_noflush_set_tty_state,
   ser_windows_setbaudrate,
   ser_windows_setstopbits,
   ser_windows_setparity,
@@ -1284,7 +1278,6 @@ static const struct serial_ops tty_ops =
   ser_base_copy_tty_state,
   ser_base_set_tty_state,
   ser_base_print_tty_state,
-  ser_base_noflush_set_tty_state,
   NULL,
   NULL,
   NULL,
@@ -1315,7 +1308,6 @@ static const struct serial_ops pipe_ops =
   ser_base_copy_tty_state,
   ser_base_set_tty_state,
   ser_base_print_tty_state,
-  ser_base_noflush_set_tty_state,
   ser_base_setbaudrate,
   ser_base_setstopbits,
   ser_base_setparity,
@@ -1346,7 +1338,6 @@ static const struct serial_ops tcp_ops =
   ser_base_copy_tty_state,
   ser_base_set_tty_state,
   ser_base_print_tty_state,
-  ser_base_noflush_set_tty_state,
   ser_base_setbaudrate,
   ser_base_setstopbits,
   ser_base_setparity,

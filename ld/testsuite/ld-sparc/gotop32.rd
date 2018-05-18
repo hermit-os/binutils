@@ -17,9 +17,9 @@ Section Headers:
  +\[[ 0-9]+\] .dynamic +DYNAMIC +0+12000 0+2000 0+70 08 +WA +3 +0 +4
  +\[[ 0-9]+\] .got +PROGBITS +0+12070 0+2070 0+8 04 +WA +0 +0 +4
  +\[[ 0-9]+\] .data +PROGBITS +0+13000 0+3000 0+8 00 +WA +0 +0 4096
- +\[[ 0-9]+\] .shstrtab +.*
  +\[[ 0-9]+\] .symtab +.*
  +\[[ 0-9]+\] .strtab +.*
+ +\[[ 0-9]+\] .shstrtab +.*
 #...
 
 Elf file type is DYN \(Shared object file\)
@@ -33,7 +33,7 @@ Program Headers:
  +DYNAMIC +0x0+2000 0x0+12000 0x0+12000 0x0+70 0x0+70 RW +0x4
 #...
 
-Relocation section '.rela.dyn' at offset 0x[0-9a-f]+ contains 1 entries:
+Relocation section '.rela.dyn' at offset 0x[0-9a-f]+ contains 1 entry:
  Offset +Info +Type +Sym. Value +Symbol's Name \+ Addend
 [0-9a-f ]+R_SPARC_GLOB_DAT +0+13000 +sym \+ 0
 

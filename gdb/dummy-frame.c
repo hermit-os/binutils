@@ -1,6 +1,6 @@
 /* Code dealing with dummy stack frames, for GDB, the GNU debugger.
 
-   Copyright (C) 1986-2016 Free Software Foundation, Inc.
+   Copyright (C) 1986-2018 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -26,7 +26,7 @@
 #include "frame-unwind.h"
 #include "command.h"
 #include "gdbcmd.h"
-#include "observer.h"
+#include "observable.h"
 #include "gdbthread.h"
 #include "infcall.h"
 
@@ -282,7 +282,7 @@ cleanup_dummy_frames (struct target_ops *target, int from_tty)
 struct dummy_frame_cache
 {
   struct frame_id this_id;
-  struct regcache *prev_regcache;
+  readonly_detached_regcache *prev_regcache;
 };
 
 static int
@@ -352,8 +352,8 @@ dummy_frame_prev_register (struct frame_info *this_frame,
   /* Use the regcache_cooked_read() method so that it, on the fly,
      constructs either a raw or pseudo register from the raw
      register cache.  */
-  regcache_cooked_read (cache->prev_regcache, regnum,
-			value_contents_writeable (reg_val));
+  cache->prev_regcache->cooked_read (regnum,
+				     value_contents_writeable (reg_val));
   return reg_val;
 }
 
@@ -403,24 +403,19 @@ fprint_dummy_frames (struct ui_file *file)
 }
 
 static void
-maintenance_print_dummy_frames (char *args, int from_tty)
+maintenance_print_dummy_frames (const char *args, int from_tty)
 {
   if (args == NULL)
     fprint_dummy_frames (gdb_stdout);
   else
     {
-      struct cleanup *cleanups;
-      struct ui_file *file = gdb_fopen (args, "w");
+      stdio_file file;
 
-      if (file == NULL)
+      if (!file.open (args, "w"))
 	perror_with_name (_("maintenance print dummy-frames"));
-      cleanups = make_cleanup_ui_file_delete (file);
-      fprint_dummy_frames (file);    
-      do_cleanups (cleanups);
+      fprint_dummy_frames (&file);
     }
 }
-
-extern void _initialize_dummy_frame (void);
 
 void
 _initialize_dummy_frame (void)
@@ -429,5 +424,5 @@ _initialize_dummy_frame (void)
 	   _("Print the contents of the internal dummy-frame stack."),
 	   &maintenanceprintlist);
 
-  observer_attach_inferior_created (cleanup_dummy_frames);
+  gdb::observers::inferior_created.attach (cleanup_dummy_frames);
 }

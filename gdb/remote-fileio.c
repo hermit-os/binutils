@@ -1,6 +1,6 @@
 /* Remote File-I/O communications
 
-   Copyright (C) 2003-2016 Free Software Foundation, Inc.
+   Copyright (C) 2003-2018 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -308,7 +308,8 @@ static quit_handler_ftype *remote_fileio_o_quit_handler;
 static void
 remote_fileio_quit_handler (void)
 {
-  quit ();
+  if (check_quit_flag ())
+    quit ();
 }
 
 static void
@@ -1099,7 +1100,7 @@ remote_fileio_func_system (char *buf)
 }
 
 static struct {
-  char *name;
+  const char *name;
   void (*func)(char *);
 } remote_fio_func_map[] = {
   { "open", remote_fileio_func_open },
@@ -1117,10 +1118,9 @@ static struct {
   { NULL, NULL }
 };
 
-static int
-do_remote_fileio_request (struct ui_out *uiout, void *buf_arg)
+static void
+do_remote_fileio_request (char *buf)
 {
-  char *buf = (char *) buf_arg;
   char *c;
   int idx;
 
@@ -1134,10 +1134,10 @@ do_remote_fileio_request (struct ui_out *uiout, void *buf_arg)
   for (idx = 0; remote_fio_func_map[idx].name; ++idx)
     if (!strcmp (remote_fio_func_map[idx].name, buf))
       break;
-  if (!remote_fio_func_map[idx].name)	/* ERROR: No such function.  */
-    return RETURN_ERROR;
-  remote_fio_func_map[idx].func (c);
-  return 0;
+  if (!remote_fio_func_map[idx].name)
+    remote_fileio_reply (-1, FILEIO_ENOSYS);
+  else
+    remote_fio_func_map[idx].func (c);
 }
 
 /* Close any open descriptors, and reinitialize the file mapping.  */
@@ -1169,8 +1169,6 @@ remote_fileio_reset (void)
 void
 remote_fileio_request (char *buf, int ctrlc_pending_p)
 {
-  int ex;
-
   /* Save the previous quit handler, so we can restore it.  No need
      for a cleanup since we catch all exceptions below.  Note that the
      quit handler is also restored by remote_fileio_reply just before
@@ -1187,20 +1185,18 @@ remote_fileio_request (char *buf, int ctrlc_pending_p)
     }
   else
     {
-      ex = catch_exceptions (current_uiout,
-			     do_remote_fileio_request, (void *)buf,
-			     RETURN_MASK_ALL);
-      switch (ex)
+      TRY
 	{
-	case RETURN_ERROR:
-	  remote_fileio_reply (-1, FILEIO_ENOSYS);
-	  break;
-	case RETURN_QUIT:
-	  remote_fileio_reply (-1, FILEIO_EINTR);
-	  break;
-	default:
-	  break;
+	  do_remote_fileio_request (buf);
 	}
+      CATCH (ex, RETURN_MASK_ALL)
+	{
+	  if (ex.reason == RETURN_QUIT)
+	    remote_fileio_reply (-1, FILEIO_EINTR);
+	  else
+	    remote_fileio_reply (-1, FILEIO_EIO);
+	}
+      END_CATCH
     }
 
   quit_handler = remote_fileio_o_quit_handler;
@@ -1271,7 +1267,7 @@ remote_fileio_to_host_stat (struct fio_stat *fst, struct stat *st)
 
 
 static void
-set_system_call_allowed (char *args, int from_tty)
+set_system_call_allowed (const char *args, int from_tty)
 {
   if (args)
     {
@@ -1288,7 +1284,7 @@ set_system_call_allowed (char *args, int from_tty)
 }
 
 static void
-show_system_call_allowed (char *args, int from_tty)
+show_system_call_allowed (const char *args, int from_tty)
 {
   if (args)
     error (_("Garbage after \"show remote "

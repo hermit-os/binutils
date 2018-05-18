@@ -1,5 +1,5 @@
 #source: ifunc-21.s
-#ld: -shared -z nocombreloc
+#ld: -shared --hash-style=sysv -z nocombreloc
 #objdump: -d -s -j .got.plt -j .text
 #target: aarch64*-*-*
 
@@ -20,7 +20,7 @@ Disassembly of section .text:
 
 .* <bar>:
  .*:	90000080 	adrp	x0, 10000 <.*>
- .*:	.* 	ldr	x0, \[x0,#(960|1040)\]
+ .*:	.* 	ldr	x0, \[x0, #(960|1040)\]
  .*:	d65f03c0 	ret
 
 #pass

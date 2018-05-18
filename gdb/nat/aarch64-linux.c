@@ -1,4 +1,4 @@
-/* Copyright (C) 2009-2016 Free Software Foundation, Inc.
+/* Copyright (C) 2009-2018 Free Software Foundation, Inc.
    Contributed by ARM Ltd.
 
    This file is part of GDB.
@@ -82,6 +82,14 @@ aarch64_linux_new_thread (struct lwp_info *lwp)
   DR_MARK_ALL_CHANGED (info->dr_changed_wp, aarch64_num_wp_regs);
 
   lwp_set_arch_private_info (lwp, info);
+}
+
+/* See nat/aarch64-linux.h.  */
+
+void
+aarch64_linux_delete_thread (struct arch_lwp_info *arch_lwp)
+{
+  xfree (arch_lwp);
 }
 
 /* Convert native siginfo FROM to the siginfo in the layout of the
@@ -205,7 +213,7 @@ aarch64_siginfo_from_compat_siginfo (siginfo_t *to, compat_siginfo_t *from)
    storage (or its descriptor).  */
 
 ps_err_e
-aarch64_ps_get_thread_area (const struct ps_prochandle *ph,
+aarch64_ps_get_thread_area (struct ps_prochandle *ph,
 			    lwpid_t lwpid, int idx, void **base,
 			    int is_64bit_p)
 {

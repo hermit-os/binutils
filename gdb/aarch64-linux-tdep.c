@@ -1,6 +1,6 @@
 /* Target-dependent code for GNU/Linux AArch64.
 
-   Copyright (C) 2009-2016 Free Software Foundation, Inc.
+   Copyright (C) 2009-2018 Free Software Foundation, Inc.
    Contributed by ARM Ltd.
 
    This file is part of GDB.
@@ -45,6 +45,8 @@
 
 #include "record-full.h"
 #include "linux-record.h"
+#include "auxv.h"
+#include "elf/common.h"
 
 /* Signal frame handling.
 
@@ -231,6 +233,20 @@ aarch64_linux_iterate_over_regset_sections (struct gdbarch *gdbarch,
       NULL, cb_data);
 }
 
+/* Implement the "core_read_description" gdbarch method.  */
+
+static const struct target_desc *
+aarch64_linux_core_read_description (struct gdbarch *gdbarch,
+				     struct target_ops *target, bfd *abfd)
+{
+  CORE_ADDR aarch64_hwcap = 0;
+
+  if (target_auxv_search (target, AT_HWCAP, &aarch64_hwcap) != 1)
+    return NULL;
+
+  return aarch64_read_description ();
+}
+
 /* Implementation of `gdbarch_stap_is_single_operand', as defined in
    gdbarch.h.  */
 
@@ -289,7 +305,7 @@ aarch64_stap_parse_special_token (struct gdbarch *gdbarch,
 	       regname, p->saved_arg);
 
       ++tmp;
-      tmp = skip_spaces_const (tmp);
+      tmp = skip_spaces (tmp);
       /* Now we expect a number.  It can begin with '#' or simply
 	 a digit.  */
       if (*tmp == '#')
@@ -985,6 +1001,15 @@ aarch64_linux_syscall_record (struct regcache *regcache,
   return 0;
 }
 
+/* Implement the "gcc_target_options" gdbarch method.  */
+
+static char *
+aarch64_linux_gcc_target_options (struct gdbarch *gdbarch)
+{
+  /* GCC doesn't know "-m64".  */
+  return NULL;
+}
+
 static void
 aarch64_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
 {
@@ -1018,6 +1043,8 @@ aarch64_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
 
   set_gdbarch_iterate_over_regset_sections
     (gdbarch, aarch64_linux_iterate_over_regset_sections);
+  set_gdbarch_core_read_description
+    (gdbarch, aarch64_linux_core_read_description);
 
   /* SystemTap related.  */
   set_gdbarch_stap_integer_prefixes (gdbarch, stap_integer_prefixes);
@@ -1034,6 +1061,11 @@ aarch64_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
   set_gdbarch_process_record (gdbarch, aarch64_process_record);
   /* Syscall record.  */
   tdep->aarch64_syscall_record = aarch64_linux_syscall_record;
+
+  /* The top byte of a user space address known as the "tag",
+     is ignored by the kernel and can be regarded as additional
+     data associated with the address.  */
+  set_gdbarch_significant_addr_bit (gdbarch, 56);
 
   /* Initialize the aarch64_linux_record_tdep.  */
   /* These values are the size of the type that will be used in a system
@@ -1204,15 +1236,12 @@ aarch64_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
   set_gdbarch_displaced_step_copy_insn (gdbarch,
 					aarch64_displaced_step_copy_insn);
   set_gdbarch_displaced_step_fixup (gdbarch, aarch64_displaced_step_fixup);
-  set_gdbarch_displaced_step_free_closure (gdbarch,
-					   simple_displaced_step_free_closure);
   set_gdbarch_displaced_step_location (gdbarch, linux_displaced_step_location);
   set_gdbarch_displaced_step_hw_singlestep (gdbarch,
 					    aarch64_displaced_step_hw_singlestep);
-}
 
-/* Provide a prototype to silence -Wmissing-prototypes.  */
-extern initialize_file_ftype _initialize_aarch64_linux_tdep;
+  set_gdbarch_gcc_target_options (gdbarch, aarch64_linux_gcc_target_options);
+}
 
 void
 _initialize_aarch64_linux_tdep (void)

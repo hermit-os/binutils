@@ -1,5 +1,5 @@
 # Frame-filter commands.
-# Copyright (C) 2013-2016 Free Software Foundation, Inc.
+# Copyright (C) 2013-2018 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -142,7 +142,7 @@ def _do_enable_frame_filter(command_tuple, flag):
         try:
             ff = op_list[frame_filter]
         except KeyError:
-            msg = "frame-filter '" + str(name) + "' not found."
+            msg = "frame-filter '" + str(frame_filter) + "' not found."
             raise gdb.GdbError(msg)
 
         gdb.frames.set_enabled(ff, flag)
@@ -339,7 +339,7 @@ class SetFrameFilterPriority(gdb.Command):
         try:
             ff = op_list[frame_filter]
         except KeyError:
-            msg = "frame-filter '" + str(name) + "' not found."
+            msg = "frame-filter '" + str(frame_filter) + "' not found."
             raise gdb.GdbError(msg)
 
         gdb.frames.set_priority(ff, priority)

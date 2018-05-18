@@ -1,6 +1,6 @@
 /* Obstack wrapper for GDB.
 
-   Copyright (C) 2002-2016 Free Software Foundation, Inc.
+   Copyright (C) 2002-2018 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -62,5 +62,40 @@ extern char *obconcat (struct obstack *obstackp, ...) ATTRIBUTE_SENTINEL;
    obstack OBSTACKP.  */
 
 extern char *obstack_strdup (struct obstack *obstackp, const char *string);
+
+/* An obstack that frees itself on scope exit.  */
+struct auto_obstack : obstack
+{
+  auto_obstack ()
+  { obstack_init (this); }
+
+  ~auto_obstack ()
+  { obstack_free (this, NULL); }
+
+  /* Free all memory in the obstack but leave it valid for further
+     allocation.  */
+  void clear ()
+  { obstack_free (this, obstack_base (this)); }
+};
+
+/* Objects are allocated on obstack instead of heap.  */
+
+struct allocate_on_obstack
+{
+  allocate_on_obstack () = default;
+
+  void* operator new (size_t size, struct obstack *obstack)
+  {
+    return obstack_alloc (obstack, size);
+  }
+
+  void* operator new[] (size_t size, struct obstack *obstack)
+  {
+    return obstack_alloc (obstack, size);
+  }
+
+  void operator delete (void *memory) {}
+  void operator delete[] (void *memory) {}
+};
 
 #endif

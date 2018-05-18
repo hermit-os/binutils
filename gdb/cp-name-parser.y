@@ -1,6 +1,6 @@
 /* YACC parser for C++ names, for GDB.
 
-   Copyright (C) 2003-2016 Free Software Foundation, Inc.
+   Copyright (C) 2003-2018 Free Software Foundation, Inc.
 
    Parts of the lexer are based on c-exp.y from GDB.
 
@@ -173,7 +173,7 @@ static struct demangle_component *d_binary (const char *,
 
 int yyparse (void);
 static int yylex (void);
-static void yyerror (char *);
+static void yyerror (const char *);
 
 /* Enable yydebug for the stand-alone parser.  */
 #ifdef TEST_CPNAMES
@@ -193,14 +193,6 @@ fill_comp (enum demangle_component_type d_type, struct demangle_component *lhs,
   i = cplus_demangle_fill_component (ret, d_type, lhs, rhs);
   gdb_assert (i);
 
-  return ret;
-}
-
-static struct demangle_component *
-make_empty (enum demangle_component_type d_type)
-{
-  struct demangle_component *ret = d_grab ();
-  ret->type = d_type;
   return ret;
 }
 
@@ -432,9 +424,7 @@ function
 
 demangler_special
 		:	DEMANGLER_SPECIAL start
-			{ $$ = make_empty ((enum demangle_component_type) $1);
-			  d_left ($$) = $2;
-			  d_right ($$) = NULL; }
+			{ $$ = fill_comp ((enum demangle_component_type) $1, $2, NULL); }
 		|	CONSTRUCTION_VTABLE start CONSTRUCTION_IN start
 			{ $$ = fill_comp (DEMANGLE_COMPONENT_CONSTRUCTION_VTABLE, $2, $4); }
 		;
@@ -599,30 +589,22 @@ ext_only_name	:	nested_name unqualified_name
 		;
 
 nested_name	:	NAME COLONCOLON
-			{ $$.comp = make_empty (DEMANGLE_COMPONENT_QUAL_NAME);
-			  d_left ($$.comp) = $1;
-			  d_right ($$.comp) = NULL;
+			{ $$.comp = fill_comp (DEMANGLE_COMPONENT_QUAL_NAME, $1, NULL);
 			  $$.last = $$.comp;
 			}
 		|	nested_name NAME COLONCOLON
 			{ $$.comp = $1.comp;
-			  d_right ($1.last) = make_empty (DEMANGLE_COMPONENT_QUAL_NAME);
+			  d_right ($1.last) = fill_comp (DEMANGLE_COMPONENT_QUAL_NAME, $2, NULL);
 			  $$.last = d_right ($1.last);
-			  d_left ($$.last) = $2;
-			  d_right ($$.last) = NULL;
 			}
 		|	templ COLONCOLON
-			{ $$.comp = make_empty (DEMANGLE_COMPONENT_QUAL_NAME);
-			  d_left ($$.comp) = $1;
-			  d_right ($$.comp) = NULL;
+			{ $$.comp = fill_comp (DEMANGLE_COMPONENT_QUAL_NAME, $1, NULL);
 			  $$.last = $$.comp;
 			}
 		|	nested_name templ COLONCOLON
 			{ $$.comp = $1.comp;
-			  d_right ($1.last) = make_empty (DEMANGLE_COMPONENT_QUAL_NAME);
+			  d_right ($1.last) = fill_comp (DEMANGLE_COMPONENT_QUAL_NAME, $2, NULL);
 			  $$.last = d_right ($1.last);
-			  d_left ($$.last) = $2;
-			  d_right ($$.last) = NULL;
 			}
 		;
 
@@ -760,41 +742,34 @@ builtin_type	:	int_seq
 		;
 
 ptr_operator	:	'*' qualifiers_opt
-			{ $$.comp = make_empty (DEMANGLE_COMPONENT_POINTER);
-			  $$.comp->u.s_binary.left = $$.comp->u.s_binary.right = NULL;
+			{ $$.comp = fill_comp (DEMANGLE_COMPONENT_POINTER, NULL, NULL);
 			  $$.last = &d_left ($$.comp);
 			  $$.comp = d_qualify ($$.comp, $2, 0); }
 		/* g++ seems to allow qualifiers after the reference?  */
 		|	'&'
-			{ $$.comp = make_empty (DEMANGLE_COMPONENT_REFERENCE);
-			  $$.comp->u.s_binary.left = $$.comp->u.s_binary.right = NULL;
+			{ $$.comp = fill_comp (DEMANGLE_COMPONENT_REFERENCE, NULL, NULL);
+			  $$.last = &d_left ($$.comp); }
+		|	ANDAND
+			{ $$.comp = fill_comp (DEMANGLE_COMPONENT_RVALUE_REFERENCE, NULL, NULL);
 			  $$.last = &d_left ($$.comp); }
 		|	nested_name '*' qualifiers_opt
-			{ $$.comp = make_empty (DEMANGLE_COMPONENT_PTRMEM_TYPE);
-			  $$.comp->u.s_binary.left = $1.comp;
+			{ $$.comp = fill_comp (DEMANGLE_COMPONENT_PTRMEM_TYPE, $1.comp, NULL);
 			  /* Convert the innermost DEMANGLE_COMPONENT_QUAL_NAME to a DEMANGLE_COMPONENT_NAME.  */
 			  *$1.last = *d_left ($1.last);
-			  $$.comp->u.s_binary.right = NULL;
 			  $$.last = &d_right ($$.comp);
 			  $$.comp = d_qualify ($$.comp, $3, 0); }
 		|	COLONCOLON nested_name '*' qualifiers_opt
-			{ $$.comp = make_empty (DEMANGLE_COMPONENT_PTRMEM_TYPE);
-			  $$.comp->u.s_binary.left = $2.comp;
+			{ $$.comp = fill_comp (DEMANGLE_COMPONENT_PTRMEM_TYPE, $2.comp, NULL);
 			  /* Convert the innermost DEMANGLE_COMPONENT_QUAL_NAME to a DEMANGLE_COMPONENT_NAME.  */
 			  *$2.last = *d_left ($2.last);
-			  $$.comp->u.s_binary.right = NULL;
 			  $$.last = &d_right ($$.comp);
 			  $$.comp = d_qualify ($$.comp, $4, 0); }
 		;
 
 array_indicator	:	'[' ']'
-			{ $$ = make_empty (DEMANGLE_COMPONENT_ARRAY_TYPE);
-			  d_left ($$) = NULL;
-			}
+			{ $$ = fill_comp (DEMANGLE_COMPONENT_ARRAY_TYPE, NULL, NULL); }
 		|	'[' INT ']'
-			{ $$ = make_empty (DEMANGLE_COMPONENT_ARRAY_TYPE);
-			  d_left ($$) = $2;
-			}
+			{ $$ = fill_comp (DEMANGLE_COMPONENT_ARRAY_TYPE, $2, NULL); }
 		;
 
 /* Details of this approach inspired by the G++ < 3.4 parser.  */
@@ -947,8 +922,7 @@ direct_declarator
 			  $$.last = &d_right ($2);
 			}
 		|	colon_ext_name
-			{ $$.comp = make_empty (DEMANGLE_COMPONENT_TYPED_NAME);
-			  d_left ($$.comp) = $1;
+			{ $$.comp = fill_comp (DEMANGLE_COMPONENT_TYPED_NAME, $1, NULL);
 			  $$.last = &d_right ($$.comp);
 			}
 		;
@@ -964,8 +938,7 @@ declarator_1	:	ptr_operator declarator_1
 			  $$.last = $1.last;
 			  *$2.last = $1.comp; }
 		|	colon_ext_name
-			{ $$.comp = make_empty (DEMANGLE_COMPONENT_TYPED_NAME);
-			  d_left ($$.comp) = $1;
+			{ $$.comp = fill_comp (DEMANGLE_COMPONENT_TYPED_NAME, $1, NULL);
 			  $$.last = &d_right ($$.comp);
 			}
 		|	direct_declarator_1
@@ -1331,6 +1304,28 @@ d_binary (const char *name, struct demangle_component *lhs, struct demangle_comp
 		      fill_comp (DEMANGLE_COMPONENT_BINARY_ARGS, lhs, rhs));
 }
 
+/* Like ISALPHA, but also returns true for the union of all UTF-8
+   multi-byte sequence bytes and non-ASCII characters in
+   extended-ASCII charsets (e.g., Latin1).  I.e., returns true if the
+   high bit is set.  Note that not all UTF-8 ranges are allowed in C++
+   identifiers, but we don't need to be pedantic so for simplicity we
+   ignore that here.  Plus this avoids the complication of actually
+   knowing what was the right encoding.  */
+
+static inline bool
+cp_ident_is_alpha (unsigned char ch)
+{
+  return ISALPHA (ch) || ch >= 0x80;
+}
+
+/* Similarly, but Like ISALNUM.  */
+
+static inline bool
+cp_ident_is_alnum (unsigned char ch)
+{
+  return ISALNUM (ch) || ch >= 0x80;
+}
+
 /* Find the end of a symbol name starting at LEXPTR.  */
 
 static const char *
@@ -1338,7 +1333,7 @@ symbol_end (const char *lexptr)
 {
   const char *p = lexptr;
 
-  while (*p && (ISALNUM (*p) || *p == '_' || *p == '$' || *p == '.'))
+  while (*p && (cp_ident_is_alnum (*p) || *p == '_' || *p == '$' || *p == '.'))
     p++;
 
   return p;
@@ -1673,7 +1668,7 @@ yylex (void)
 	  lexptr++;
 	  return '-';
 	}
-      /* FALL THRU into number case.  */
+      /* FALL THRU.  */
 
     try_number:
     case '0':
@@ -1818,7 +1813,7 @@ yylex (void)
       return ERROR;
     }
 
-  if (!(c == '_' || c == '$' || ISALPHA (c)))
+  if (!(c == '_' || c == '$' || cp_ident_is_alpha (c)))
     {
       /* We must have come across a bad character (e.g. ';').  */
       yyerror (_("invalid character"));
@@ -1829,7 +1824,7 @@ yylex (void)
   namelen = 0;
   do
     c = tokstart[++namelen];
-  while (ISALNUM (c) || c == '_' || c == '$');
+  while (cp_ident_is_alnum (c) || c == '_' || c == '$');
 
   lexptr += namelen;
 
@@ -1961,7 +1956,7 @@ yylex (void)
 }
 
 static void
-yyerror (char *msg)
+yyerror (const char *msg)
 {
   if (global_errmsg)
     return;
@@ -1990,38 +1985,29 @@ allocate_info (void)
    cplus_demangle_print does not, specifically the global destructor
    and constructor labels.  */
 
-char *
+gdb::unique_xmalloc_ptr<char>
 cp_comp_to_string (struct demangle_component *result, int estimated_len)
 {
   size_t err;
 
-  return cplus_demangle_print (DMGL_PARAMS | DMGL_ANSI, result, estimated_len,
-			       &err);
+  char *res = cplus_demangle_print (DMGL_PARAMS | DMGL_ANSI,
+				    result, estimated_len, &err);
+  return gdb::unique_xmalloc_ptr<char> (res);
 }
 
-/* A convenience function to allocate and initialize a new struct
-   demangled_parse_info.  */
+/* Constructor for demangle_parse_info.  */
 
-struct demangle_parse_info *
-cp_new_demangle_parse_info (void)
+demangle_parse_info::demangle_parse_info ()
+: info (NULL),
+  tree (NULL)
 {
-  struct demangle_parse_info *info;
-
-  info = XNEW (struct demangle_parse_info);
-  info->info = NULL;
-  info->tree = NULL;
-  obstack_init (&info->obstack);
-
-  return info;
+  obstack_init (&obstack);
 }
 
-/* Free any memory associated with the given PARSE_INFO.  */
+/* Destructor for demangle_parse_info.  */
 
-void
-cp_demangled_name_parse_free (struct demangle_parse_info *parse_info)
+demangle_parse_info::~demangle_parse_info ()
 {
-  struct demangle_info *info = parse_info->info;
-
   /* Free any allocated chunks of memory for the parse.  */
   while (info != NULL)
     {
@@ -2032,15 +2018,11 @@ cp_demangled_name_parse_free (struct demangle_parse_info *parse_info)
     }
 
   /* Free any memory allocated during typedef replacement.  */
-  obstack_free (&parse_info->obstack, NULL);
-
-  /* Free the parser info.  */
-  free (parse_info);
+  obstack_free (&obstack, NULL);
 }
 
 /* Merge the two parse trees given by DEST and SRC.  The parse tree
    in SRC is attached to DEST at the node represented by TARGET.
-   SRC is then freed.
 
    NOTE 1: Since there is no API to merge obstacks, this function does
    even attempt to try it.  Fortunately, we do not (yet?) need this ability.
@@ -2067,22 +2049,17 @@ cp_merge_demangle_parse_infos (struct demangle_parse_info *dest,
   /* Clear the (pointer to) SRC's parse data so that it is not freed when
      cp_demangled_parse_info_free is called.  */
   src->info = NULL;
-
-  /* Free SRC.  */
-  cp_demangled_name_parse_free (src);
 }
 
 /* Convert a demangled name to a demangle_component tree.  On success,
-   a structure containing the root of the new tree is returned; it must
-   be freed by calling cp_demangled_name_parse_free. On error, NULL is
-   returned, and an error message will be set in *ERRMSG (which does
-   not need to be freed).  */
+   a structure containing the root of the new tree is returned.  On
+   error, NULL is returned, and an error message will be set in
+   *ERRMSG (which does not need to be freed).  */
 
-struct demangle_parse_info *
+struct std::unique_ptr<demangle_parse_info>
 cp_demangled_name_to_comp (const char *demangled_name, const char **errmsg)
 {
   static char errbuf[60];
-  struct demangle_parse_info *result;
 
   prev_lexptr = lexptr = demangled_name;
   error_lexptr = NULL;
@@ -2090,7 +2067,7 @@ cp_demangled_name_to_comp (const char *demangled_name, const char **errmsg)
 
   demangle_info = allocate_info ();
 
-  result = cp_new_demangle_parse_info ();
+  std::unique_ptr<demangle_parse_info> result (new demangle_parse_info);
   result->info = demangle_info;
 
   if (yyparse ())
@@ -2102,7 +2079,6 @@ cp_demangled_name_to_comp (const char *demangled_name, const char **errmsg)
 	  strcat (errbuf, "'");
 	  *errmsg = errbuf;
 	}
-      cp_demangled_name_parse_free (result);
       return NULL;
     }
 
@@ -2175,11 +2151,10 @@ internal_error (const char *file, int line, const char *fmt, ...)
 int
 main (int argc, char **argv)
 {
-  char *str2, *extra_chars = "", c;
+  char *str2, *extra_chars, c;
   char buf[65536];
   int arg;
   const char *errmsg;
-  struct demangle_parse_info *result;
 
   arg = 1;
   if (argv[arg] && strcmp (argv[arg], "--debug") == 0)
@@ -2205,7 +2180,9 @@ main (int argc, char **argv)
 	      printf ("%s\n", buf);
 	    continue;
 	  }
-	result = cp_demangled_name_to_comp (str2, &errmsg);
+
+	std::unique_ptr<demangle_parse_info> result
+	  = cp_demangled_name_to_comp (str2, &errmsg);
 	if (result == NULL)
 	  {
 	    fputs (errmsg, stderr);
@@ -2214,7 +2191,6 @@ main (int argc, char **argv)
 	  }
 
 	cp_print (result->tree);
-	cp_demangled_name_parse_free (result);
 
 	free (str2);
 	if (c)
@@ -2226,7 +2202,8 @@ main (int argc, char **argv)
       }
   else
     {
-      result = cp_demangled_name_to_comp (argv[arg], &errmsg);
+      std::unique_ptr<demangle_parse_info> result
+	= cp_demangled_name_to_comp (argv[arg], &errmsg);
       if (result == NULL)
 	{
 	  fputs (errmsg, stderr);
@@ -2234,7 +2211,6 @@ main (int argc, char **argv)
 	  return 0;
 	}
       cp_print (result->tree);
-      cp_demangled_name_parse_free (result);
       putchar ('\n');
     }
   return 0;

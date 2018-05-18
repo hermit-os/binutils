@@ -1,7 +1,7 @@
 /* Target-dependent code for PowerPC systems using the SVR4 ABI
    for GDB, the GNU debugger.
 
-   Copyright (C) 2000-2016 Free Software Foundation, Inc.
+   Copyright (C) 2000-2018 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -28,6 +28,8 @@
 #include "objfiles.h"
 #include "infcall.h"
 #include "dwarf2.h"
+#include "target-float.h"
+#include <algorithm>
 
 
 /* Check whether FTPYE is a (pointer to) function type that should use
@@ -133,10 +135,10 @@ ppc_sysv_abi_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 		    {
 		      /* Always store the floating point value using
 		         the register's floating-point format.  */
-		      gdb_byte regval[MAX_REGISTER_SIZE];
+		      gdb_byte regval[PPC_MAX_REGISTER_SIZE];
 		      struct type *regtype
 			= register_type (gdbarch, tdep->ppc_fp0_regnum + freg);
-		      convert_typed_floating (val, type, regval, regtype);
+		      target_float_convert (val, type, regval, regtype);
 		      regcache_cooked_write (regcache,
                                              tdep->ppc_fp0_regnum + freg,
 					     regval);
@@ -277,7 +279,7 @@ ppc_sysv_abi_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 		{
 		  if (write_pass)
 		    {
-		      gdb_byte regval[MAX_REGISTER_SIZE];
+		      gdb_byte regval[PPC_MAX_REGISTER_SIZE];
 		      const gdb_byte *p;
 
 		      /* 32-bit decimal floats are right aligned in the
@@ -363,11 +365,11 @@ ppc_sysv_abi_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 			  if (write_pass)
 			    {
 			      int regnum = tdep->ppc_fp0_regnum + freg;
-			      gdb_byte regval[MAX_REGISTER_SIZE];
+			      gdb_byte regval[PPC_MAX_REGISTER_SIZE];
 			      struct type *regtype
 				= register_type (gdbarch, regnum);
-			      convert_typed_floating (elval, eltype,
-						      regval, regtype);
+			      target_float_convert (elval, eltype,
+						    regval, regtype);
 			      regcache_cooked_write (regcache, regnum, regval);
 			    }
 			  freg++;
@@ -410,7 +412,7 @@ ppc_sysv_abi_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 		    }
 		  else
 		    {
-		      gdb_byte word[MAX_REGISTER_SIZE];
+		      gdb_byte word[PPC_MAX_REGISTER_SIZE];
 		      store_unsigned_integer (word, tdep->wordsize, byte_order,
 					      unpack_long (eltype, elval));
 
@@ -515,8 +517,8 @@ ppc_sysv_abi_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 	    {
 	      /* Reduce the parameter down to something that fits in a
 	         "word".  */
-	      gdb_byte word[MAX_REGISTER_SIZE];
-	      memset (word, 0, MAX_REGISTER_SIZE);
+	      gdb_byte word[PPC_MAX_REGISTER_SIZE];
+	      memset (word, 0, PPC_MAX_REGISTER_SIZE);
 	      if (len > tdep->wordsize
 		  || TYPE_CODE (type) == TYPE_CODE_STRUCT
 		  || TYPE_CODE (type) == TYPE_CODE_UNION)
@@ -622,7 +624,7 @@ get_decimal_float_return_value (struct gdbarch *gdbarch, struct type *valtype,
     {
       if (writebuf != NULL)
 	{
-	  gdb_byte regval[MAX_REGISTER_SIZE];
+	  gdb_byte regval[PPC_MAX_REGISTER_SIZE];
 	  const gdb_byte *p;
 
 	  /* 32-bit decimal float is right aligned in the doubleword.  */
@@ -705,19 +707,19 @@ do_ppc_sysv_return_value (struct gdbarch *gdbarch, struct type *func_type,
 	{
 	  /* Floats and doubles stored in "f1".  Convert the value to
 	     the required type.  */
-	  gdb_byte regval[MAX_REGISTER_SIZE];
+	  gdb_byte regval[PPC_MAX_REGISTER_SIZE];
 	  struct type *regtype = register_type (gdbarch,
                                                 tdep->ppc_fp0_regnum + 1);
 	  regcache_cooked_read (regcache, tdep->ppc_fp0_regnum + 1, regval);
-	  convert_typed_floating (regval, regtype, readbuf, type);
+	  target_float_convert (regval, regtype, readbuf, type);
 	}
       if (writebuf)
 	{
 	  /* Floats and doubles stored in "f1".  Convert the value to
 	     the register's "double" type.  */
-	  gdb_byte regval[MAX_REGISTER_SIZE];
+	  gdb_byte regval[PPC_MAX_REGISTER_SIZE];
 	  struct type *regtype = register_type (gdbarch, tdep->ppc_fp0_regnum);
-	  convert_typed_floating (writebuf, type, regval, regtype);
+	  target_float_convert (writebuf, type, regval, regtype);
 	  regcache_cooked_write (regcache, tdep->ppc_fp0_regnum + 1, regval);
 	}
       return RETURN_VALUE_REGISTER_CONVENTION;
@@ -805,7 +807,7 @@ do_ppc_sysv_return_value (struct gdbarch *gdbarch, struct type *func_type,
 	    || TYPE_CODE (type) == TYPE_CODE_CHAR
 	    || TYPE_CODE (type) == TYPE_CODE_BOOL
 	    || TYPE_CODE (type) == TYPE_CODE_PTR
-	    || TYPE_CODE (type) == TYPE_CODE_REF
+	    || TYPE_IS_REFERENCE (type)
 	    || TYPE_CODE (type) == TYPE_CODE_ENUM)
 	   && TYPE_LENGTH (type) <= tdep->wordsize)
     {
@@ -846,20 +848,20 @@ do_ppc_sysv_return_value (struct gdbarch *gdbarch, struct type *func_type,
 	  if (TYPE_CODE (eltype) == TYPE_CODE_FLT)
 	    {
 	      int regnum = tdep->ppc_fp0_regnum + 1 + i;
-	      gdb_byte regval[MAX_REGISTER_SIZE];
+	      gdb_byte regval[PPC_MAX_REGISTER_SIZE];
 	      struct type *regtype = register_type (gdbarch, regnum);
 
 	      if (writebuf != NULL)
 		{
-		  convert_typed_floating (writebuf + offset, eltype,
-					  regval, regtype);
+		  target_float_convert (writebuf + offset, eltype,
+					regval, regtype);
 		  regcache_cooked_write (regcache, regnum, regval);
 		}
 	      if (readbuf != NULL)
 		{
 		  regcache_cooked_read (regcache, regnum, regval);
-		  convert_typed_floating (regval, regtype,
-					  readbuf + offset, eltype);
+		  target_float_convert (regval, regtype,
+					readbuf + offset, eltype);
 		}
 	    }
 	  else
@@ -976,7 +978,7 @@ do_ppc_sysv_return_value (struct gdbarch *gdbarch, struct type *func_type,
       /* GCC screwed up for structures or unions whose size is less
 	 than or equal to 8 bytes..  Instead of left-aligning, it
 	 right-aligns the data into the buffer formed by r3, r4.  */
-      gdb_byte regvals[MAX_REGISTER_SIZE * 2];
+      gdb_byte regvals[PPC_MAX_REGISTER_SIZE * 2];
       int len = TYPE_LENGTH (type);
       int offset = (2 * tdep->wordsize - len) % tdep->wordsize;
 
@@ -1009,7 +1011,7 @@ do_ppc_sysv_return_value (struct gdbarch *gdbarch, struct type *func_type,
 	  /* This matches SVr4 PPC, it does not match GCC.  */
 	  /* The value is right-padded to 8 bytes and then loaded, as
 	     two "words", into r3/r4.  */
-	  gdb_byte regvals[MAX_REGISTER_SIZE * 2];
+	  gdb_byte regvals[PPC_MAX_REGISTER_SIZE * 2];
 	  regcache_cooked_read (regcache, tdep->ppc_gp0_regnum + 3,
 				regvals + 0 * tdep->wordsize);
 	  if (TYPE_LENGTH (type) > tdep->wordsize)
@@ -1022,7 +1024,7 @@ do_ppc_sysv_return_value (struct gdbarch *gdbarch, struct type *func_type,
 	  /* This matches SVr4 PPC, it does not match GCC.  */
 	  /* The value is padded out to 8 bytes and then loaded, as
 	     two "words" into r3/r4.  */
-	  gdb_byte regvals[MAX_REGISTER_SIZE * 2];
+	  gdb_byte regvals[PPC_MAX_REGISTER_SIZE * 2];
 	  memset (regvals, 0, sizeof regvals);
 	  memcpy (regvals, writebuf, TYPE_LENGTH (type));
 	  regcache_cooked_write (regcache, tdep->ppc_gp0_regnum + 3,
@@ -1189,7 +1191,7 @@ ppc64_aggregate_candidate (struct type *type,
 	      if (TYPE_CODE (type) == TYPE_CODE_STRUCT)
 		count += sub_count;
 	      else
-		count = max (count, sub_count);
+		count = std::max (count, sub_count);
 	    }
 
 	  /* There must be no padding.  */
@@ -1339,7 +1341,7 @@ ppc64_sysv_abi_push_integer (struct gdbarch *gdbarch, ULONGEST val,
 {
   struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
   enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
-  gdb_byte buf[MAX_REGISTER_SIZE];
+  gdb_byte buf[PPC_MAX_REGISTER_SIZE];
 
   if (argpos->regcache)
     store_unsigned_integer (buf, tdep->wordsize, byte_order, val);
@@ -1368,9 +1370,9 @@ ppc64_sysv_abi_push_freg (struct gdbarch *gdbarch,
 	{
 	  int regnum = tdep->ppc_fp0_regnum + argpos->freg;
 	  struct type *regtype = register_type (gdbarch, regnum);
-	  gdb_byte regval[MAX_REGISTER_SIZE];
+	  gdb_byte regval[PPC_MAX_REGISTER_SIZE];
 
-	  convert_typed_floating (val, type, regval, regtype);
+	  target_float_convert (val, type, regval, regtype);
 	  regcache_cooked_write (argpos->regcache, regnum, regval);
 	}
 
@@ -1493,7 +1495,7 @@ ppc64_sysv_abi_push_param (struct gdbarch *gdbarch,
 	    || TYPE_CODE (type) == TYPE_CODE_BOOL
 	    || TYPE_CODE (type) == TYPE_CODE_CHAR
 	    || TYPE_CODE (type) == TYPE_CODE_PTR
-	    || TYPE_CODE (type) == TYPE_CODE_REF)
+	    || TYPE_IS_REFERENCE (type))
 	   && TYPE_LENGTH (type) <= tdep->wordsize)
     {
       ULONGEST word = 0;
@@ -1813,17 +1815,17 @@ ppc64_sysv_abi_return_value_base (struct gdbarch *gdbarch, struct type *valtype,
     {
       int regnum = tdep->ppc_fp0_regnum + 1 + index;
       struct type *regtype = register_type (gdbarch, regnum);
-      gdb_byte regval[MAX_REGISTER_SIZE];
+      gdb_byte regval[PPC_MAX_REGISTER_SIZE];
 
       if (writebuf != NULL)
 	{
-	  convert_typed_floating (writebuf, valtype, regval, regtype);
+	  target_float_convert (writebuf, valtype, regval, regtype);
 	  regcache_cooked_write (regcache, regnum, regval);
 	}
       if (readbuf != NULL)
 	{
 	  regcache_cooked_read (regcache, regnum, regval);
-	  convert_typed_floating (regval, regtype, readbuf, valtype);
+	  target_float_convert (regval, regtype, readbuf, valtype);
 	}
       return 1;
     }
@@ -1999,8 +2001,7 @@ ppc64_sysv_abi_return_value (struct gdbarch *gdbarch, struct value *function,
     }
 
   /* All pointers live in r3.  */
-  if (TYPE_CODE (valtype) == TYPE_CODE_PTR
-      || TYPE_CODE (valtype) == TYPE_CODE_REF)
+  if (TYPE_CODE (valtype) == TYPE_CODE_PTR || TYPE_IS_REFERENCE (valtype))
     {
       int regnum = tdep->ppc_gp0_regnum + 3;
 
@@ -2071,7 +2072,7 @@ ppc64_sysv_abi_return_value (struct gdbarch *gdbarch, struct value *function,
 
       for (i = 0; i < n_regs; i++)
 	{
-	  gdb_byte regval[MAX_REGISTER_SIZE];
+	  gdb_byte regval[PPC_MAX_REGISTER_SIZE];
 	  int regnum = tdep->ppc_gp0_regnum + 3 + i;
 	  int offset = i * tdep->wordsize;
 	  int len = TYPE_LENGTH (valtype) - offset;

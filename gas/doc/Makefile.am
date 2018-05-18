@@ -1,6 +1,6 @@
 ## Process this file with automake to generate Makefile.in
 #
-#   Copyright (C) 2012-2016 Free Software Foundation, Inc.
+#   Copyright (C) 2012-2018 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,10 +58,7 @@ CPU_DOCS = \
 	c-epiphany.texi \
 	c-h8300.texi \
 	c-hppa.texi \
-	c-i370.texi \
 	c-i386.texi \
-	c-i860.texi \
-	c-i960.texi \
 	c-ip2k.texi \
 	c-lm32.texi \
 	c-m32c.texi \
@@ -80,12 +77,13 @@ CPU_DOCS = \
 	c-pdp11.texi \
 	c-pj.texi \
 	c-ppc.texi \
+	c-pru.texi \
 	c-rl78.texi \
+	c-riscv.texi \
 	c-rx.texi \
 	c-s390.texi \
 	c-score.texi \
 	c-sh.texi \
-	c-sh64.texi \
 	c-sparc.texi \
         c-tic54x.texi \
         c-tic6x.texi \

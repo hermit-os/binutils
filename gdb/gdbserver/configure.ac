@@ -1,5 +1,5 @@
 dnl Autoconf configure script for GDB server.
-dnl Copyright (C) 2000-2016 Free Software Foundation, Inc.
+dnl Copyright (C) 2000-2018 Free Software Foundation, Inc.
 dnl
 dnl This file is part of GDB.
 dnl
@@ -38,10 +38,11 @@ AC_PROG_RANLIB
 
 AC_ARG_PROGRAM
 
-AC_HEADER_STDC
+# We require a C++11 compiler.  Check if one is available, and if
+# necessary, set CXX_DIALECT to some -std=xxx switch.
+AX_CXX_COMPILE_STDCXX(11, , mandatory)
 
-# See if we are building with C++, and substitute COMPILER.
-GDB_AC_BUILD_WITH_CXX
+AC_HEADER_STDC
 
 # Set the 'development' global.
 . $srcdir/../../bfd/development.sh
@@ -55,23 +56,30 @@ else
 fi
 GDB_AC_LIBMCHECK(${libmcheck_default})
 
+if $development; then
+  srv_selftest_objs="common/selftest.o"
+  AC_DEFINE(GDB_SELF_TEST, 1,
+            [Define if self-testing features should be enabled])
+fi
+
 ACX_NONCANONICAL_TARGET
 ACX_NONCANONICAL_HOST
 
 # Dependency checking.
 ZW_CREATE_DEPDIR
-ZW_PROG_COMPILER_DEPENDENCIES([CC])
 
-# Check for the 'make' the user wants to use.
-AC_CHECK_PROGS(MAKE, make)
-MAKE_IS_GNU=
-case "`$MAKE --version 2>&1 | sed 1q`" in
-  *GNU*)
-    MAKE_IS_GNU=yes
-    ;;
-esac
-AM_CONDITIONAL(GMAKE, test "$MAKE_IS_GNU" = yes)
-AC_PROG_MAKE_SET
+# Create sub-directories for objects and dependencies.
+CONFIG_SRC_SUBDIR="arch common"
+AC_SUBST(CONFIG_SRC_SUBDIR)
+
+AC_CONFIG_COMMANDS([gdbdepdir],[
+  for subdir in ${CONFIG_SRC_SUBDIR}
+  do
+      $SHELL $ac_aux_dir/mkinstalldirs $subdir/$DEPDIR
+  done],
+  [ac_aux_dir=$ac_aux_dir DEPDIR=$DEPDIR CONFIG_SRC_SUBDIR="$CONFIG_SRC_SUBDIR"])
+
+ZW_PROG_COMPILER_DEPENDENCIES([CC])
 
 gnulib_extra_configure_args=
 # If large-file support is disabled, make sure gnulib does the same.
@@ -89,7 +97,7 @@ ACX_CONFIGURE_DIR(["../gnulib"], ["build-gnulib-gdbserver"],
 
 ACX_CONFIGURE_DIR(["../../libiberty"], ["build-libiberty-gdbserver"])
 
-AC_CHECK_HEADERS(sgtty.h termio.h termios.h sys/reg.h string.h dnl
+AC_CHECK_HEADERS(termios.h sys/reg.h string.h dnl
 		 proc_service.h sys/procfs.h linux/elf.h dnl
 		 fcntl.h signal.h sys/file.h dnl
 		 sys/ioctl.h netinet/in.h sys/socket.h netdb.h dnl
@@ -173,6 +181,14 @@ AC_CHECK_DECLS([strerror, perror, vasprintf, vsnprintf])
 
 AC_CHECK_MEMBERS([struct stat.st_blocks, struct stat.st_blksize])
 
+# See if <sys/user.h> supports the %fs_base and %gs_bas amd64 segment registers.
+# Older amd64 Linux's don't have the fs_base and gs_base members of
+# `struct user_regs_struct'.
+AC_CHECK_MEMBERS([struct user_regs_struct.fs_base, struct user_regs_struct.gs_base],
+     [], [], [#include <sys/types.h>
+#include <sys/user.h>])
+
+
 AC_CHECK_TYPES(socklen_t, [], [],
 [#include <sys/types.h>
 #include <sys/socket.h>
@@ -218,6 +234,20 @@ got it
                     [gdb_cv_i386_is_x86_64=no])
                     CPPFLAGS="$save_CPPFLAGS"])
     ;;
+
+  x86_64-*-linux*)
+    AC_CACHE_CHECK([if building for x32], [gdb_cv_x86_is_x32],
+		   [save_CPPFLAGS="$CPPFLAGS"
+		    CPPFLAGS="$CPPFLAGS $CFLAGS"
+		    AC_EGREP_CPP([got it], [
+#if __x86_64__ && __ILP32__
+got it
+#endif
+		 ], [gdb_cv_x86_is_x32=yes],
+		    [gdb_cv_x86_is_x32=no])
+		    CPPFLAGS="$save_CPPFLAGS"])
+    ;;
+
   m68k-*-*)
     AC_CACHE_CHECK([if building for Coldfire], [gdb_cv_m68k_is_coldfire],
       	           [save_CPPFLAGS="$CPPFLAGS"
@@ -382,7 +412,7 @@ if test "$srv_xmlfiles" != ""; then
   done
 fi
 
-GDBSERVER_DEPFILES="$srv_regobj $srv_tgtobj $srv_hostio_err_objs $srv_thread_depfiles $srv_host_obs"
+GDBSERVER_DEPFILES="$srv_regobj $srv_tgtobj $srv_hostio_err_objs $srv_thread_depfiles $srv_host_obs $srv_selftest_objs"
 GDBSERVER_LIBS="$srv_libs"
 
 dnl Check whether the target supports __sync_*_compare_and_swap.

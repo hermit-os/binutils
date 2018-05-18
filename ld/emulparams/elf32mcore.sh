@@ -28,7 +28,6 @@ OTHER_BSS_END_SYMBOLS="__bss_end__ = . ;"
 STACK_ADDR=0x80000
 
 TEMPLATE_NAME=elf32
-GENERATE_SHLIB_SCRIPT=yes
 
 # This code gets inserted into the generic elf32.sc linker script
 # and allows us to define our own command line switches.
@@ -41,8 +40,7 @@ PARSE_AND_LIST_LONGOPTS='
 '
 
 PARSE_AND_LIST_OPTIONS='
-  fprintf (file, _("  --base_file <basefile>\n"));
-  fprintf (file, _("\t\t\tGenerate a base file for relocatable DLLs\n"));
+  fprintf (file, _("  --base_file <basefile>      Generate a base file for relocatable DLLs\n"));
 '
 
 PARSE_AND_LIST_ARGS_CASES='

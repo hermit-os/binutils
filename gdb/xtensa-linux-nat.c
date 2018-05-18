@@ -1,6 +1,6 @@
 /* Xtensa GNU/Linux native support.
 
-   Copyright (C) 2007-2016 Free Software Foundation, Inc.
+   Copyright (C) 2007-2018 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -45,13 +45,23 @@
    hardware-specific overlays.  */
 #include "xtensa-xtregs.c"
 
+class xtensa_linux_nat_target final : public linux_nat_target
+{
+public:
+  /* Add our register access methods.  */
+  void fetch_registers (struct regcache *, int) override;
+  void store_registers (struct regcache *, int) override;
+};
+
+static xtensa_linux_nat_target the_xtensa_linux_nat_target;
+
 void
 fill_gregset (const struct regcache *regcache,
 	      gdb_gregset_t *gregsetp, int regnum)
 {
   int i;
   xtensa_elf_gregset_t *regs = (xtensa_elf_gregset_t *) gregsetp;
-  struct gdbarch *gdbarch = get_regcache_arch (regcache);
+  struct gdbarch *gdbarch = regcache->arch ();
 
   if (regnum == gdbarch_pc_regnum (gdbarch) || regnum == -1)
     regcache_raw_collect (regcache, gdbarch_pc_regnum (gdbarch), &regs->pc);
@@ -82,6 +92,10 @@ fill_gregset (const struct regcache *regcache,
     regcache_raw_collect (regcache,
 			  gdbarch_tdep (gdbarch)->sar_regnum,
 			  &regs->sar);
+  if (regnum == gdbarch_tdep (gdbarch)->threadptr_regnum || regnum == -1)
+    regcache_raw_collect (regcache,
+			  gdbarch_tdep (gdbarch)->threadptr_regnum,
+			  &regs->threadptr);
   if (regnum >=gdbarch_tdep (gdbarch)->ar_base
       && regnum < gdbarch_tdep (gdbarch)->ar_base
 		    + gdbarch_tdep (gdbarch)->num_aregs)
@@ -94,6 +108,20 @@ fill_gregset (const struct regcache *regcache,
 			      gdbarch_tdep (gdbarch)->ar_base + i,
 			      &regs->ar[i]);
     }
+  if (regnum >= gdbarch_tdep (gdbarch)->a0_base
+      && regnum < gdbarch_tdep (gdbarch)->a0_base + C0_NREGS)
+    regcache_raw_collect (regcache, regnum,
+			  &regs->ar[(4 * regs->windowbase + regnum
+				     - gdbarch_tdep (gdbarch)->a0_base)
+			  % gdbarch_tdep (gdbarch)->num_aregs]);
+  else if (regnum == -1)
+    {
+      for (i = 0; i < C0_NREGS; ++i)
+	regcache_raw_collect (regcache,
+			      gdbarch_tdep (gdbarch)->a0_base + i,
+			      &regs->ar[(4 * regs->windowbase + i)
+			      % gdbarch_tdep (gdbarch)->num_aregs]);
+    }
 }
 
 static void
@@ -103,7 +131,7 @@ supply_gregset_reg (struct regcache *regcache,
   int i;
   xtensa_elf_gregset_t *regs = (xtensa_elf_gregset_t *) gregsetp;
 
-  struct gdbarch *gdbarch = get_regcache_arch (regcache);
+  struct gdbarch *gdbarch = regcache->arch ();
 
   if (regnum == gdbarch_pc_regnum (gdbarch) || regnum == -1)
     regcache_raw_supply (regcache, gdbarch_pc_regnum (gdbarch), &regs->pc);
@@ -134,6 +162,10 @@ supply_gregset_reg (struct regcache *regcache,
     regcache_raw_supply (regcache,
 			  gdbarch_tdep (gdbarch)->sar_regnum,
 			  &regs->sar);
+  if (regnum == gdbarch_tdep (gdbarch)->threadptr_regnum || regnum == -1)
+    regcache_raw_supply (regcache,
+			  gdbarch_tdep (gdbarch)->threadptr_regnum,
+			  &regs->threadptr);
   if (regnum >=gdbarch_tdep (gdbarch)->ar_base
       && regnum < gdbarch_tdep (gdbarch)->ar_base
 		    + gdbarch_tdep (gdbarch)->num_aregs)
@@ -145,6 +177,20 @@ supply_gregset_reg (struct regcache *regcache,
 	regcache_raw_supply (regcache,
 			      gdbarch_tdep (gdbarch)->ar_base + i,
 			      &regs->ar[i]);
+    }
+  if (regnum >= gdbarch_tdep (gdbarch)->a0_base
+      && regnum < gdbarch_tdep (gdbarch)->a0_base + C0_NREGS)
+    regcache_raw_supply (regcache, regnum,
+			 &regs->ar[(4 * regs->windowbase + regnum
+				    - gdbarch_tdep (gdbarch)->a0_base)
+			 % gdbarch_tdep (gdbarch)->num_aregs]);
+  else if (regnum == -1)
+    {
+      for (i = 0; i < C0_NREGS; ++i)
+	regcache_raw_supply (regcache,
+			     gdbarch_tdep (gdbarch)->a0_base + i,
+			     &regs->ar[(4 * regs->windowbase + i)
+			     % gdbarch_tdep (gdbarch)->num_aregs]);
     }
 }
 
@@ -174,8 +220,8 @@ supply_fpregset (struct regcache *regcache,
 static void
 fetch_gregs (struct regcache *regcache, int regnum)
 {
-  int tid = ptid_get_lwp (inferior_ptid);
-  const gdb_gregset_t regs;
+  int tid = ptid_get_lwp (regcache_get_ptid (regcache));
+  gdb_gregset_t regs;
   int areg;
   
   if (ptrace (PTRACE_GETREGS, tid, 0, (long) &regs) < 0)
@@ -193,7 +239,7 @@ fetch_gregs (struct regcache *regcache, int regnum)
 static void
 store_gregs (struct regcache *regcache, int regnum)
 {
-  int tid = ptid_get_lwp (inferior_ptid);
+  int tid = ptid_get_lwp (regcache_get_ptid (regcache));
   gdb_gregset_t regs;
   int areg;
 
@@ -221,7 +267,7 @@ static int xtreg_high;
 static void
 fetch_xtregs (struct regcache *regcache, int regnum)
 {
-  int tid = ptid_get_lwp (inferior_ptid);
+  int tid = ptid_get_lwp (regcache_get_ptid (regcache));
   const xtensa_regtable_t *ptr;
   char xtregs [XTENSA_ELF_XTREG_SIZE];
 
@@ -237,7 +283,7 @@ fetch_xtregs (struct regcache *regcache, int regnum)
 static void
 store_xtregs (struct regcache *regcache, int regnum)
 {
-  int tid = ptid_get_lwp (inferior_ptid);
+  int tid = ptid_get_lwp (regcache_get_ptid (regcache));
   const xtensa_regtable_t *ptr;
   char xtregs [XTENSA_ELF_XTREG_SIZE];
 
@@ -253,9 +299,9 @@ store_xtregs (struct regcache *regcache, int regnum)
     perror_with_name (_("Couldn't write extended registers"));
 }
 
-static void
-xtensa_linux_fetch_inferior_registers (struct target_ops *ops,
-				       struct regcache *regcache, int regnum)
+void
+xtensa_linux_nat_target::fetch_registers (struct regcache *regcache,
+					  int regnum)
 {
   if (regnum == -1)
     {
@@ -268,9 +314,9 @@ xtensa_linux_fetch_inferior_registers (struct target_ops *ops,
     fetch_xtregs (regcache, regnum);
 }
 
-static void
-xtensa_linux_store_inferior_registers (struct target_ops *ops,
-				       struct regcache *regcache, int regnum)
+void
+xtensa_linux_nat_target::store_registers (struct regcache *regcache,
+					  int regnum)
 {
   if (regnum == -1)
     {
@@ -286,7 +332,7 @@ xtensa_linux_store_inferior_registers (struct target_ops *ops,
 /* Called by libthread_db.  */
 
 ps_err_e
-ps_get_thread_area (const struct ps_prochandle *ph,
+ps_get_thread_area (struct ps_prochandle *ph,
                     lwpid_t lwpid, int idx, void **base)
 {
   xtensa_elf_gregset_t regs;
@@ -302,12 +348,9 @@ ps_get_thread_area (const struct ps_prochandle *ph,
   return PS_OK;
 }
 
-void _initialize_xtensa_linux_nat (void);
-
 void
 _initialize_xtensa_linux_nat (void)
 {
-  struct target_ops *t;
   const xtensa_regtable_t *ptr;
 
   /* Calculate the number range for extended registers.  */
@@ -321,12 +364,6 @@ _initialize_xtensa_linux_nat (void)
 	xtreg_high = ptr->gdb_regnum;
     }
 
-  /* Fill in the generic GNU/Linux methods.  */
-  t = linux_target ();
-
-  /* Add our register access methods.  */
-  t->to_fetch_registers = xtensa_linux_fetch_inferior_registers;
-  t->to_store_registers = xtensa_linux_store_inferior_registers;
-
-  linux_nat_add_target (t);
+  linux_target = &the_xtensa_linux_nat_target;
+  add_inf_child_target (&the_xtensa_linux_nat_target);
 }

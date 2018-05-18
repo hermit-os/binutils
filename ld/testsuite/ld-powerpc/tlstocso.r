@@ -21,9 +21,9 @@ Section Headers:
  +\[[ 0-9]+\] \.opd .*
  +\[[ 0-9]+\] \.got .*
  +\[[ 0-9]+\] \.plt .*
- +\[[ 0-9]+\] \.shstrtab .*
  +\[[ 0-9]+\] \.symtab .*
  +\[[ 0-9]+\] \.strtab .*
+ +\[[ 0-9]+\] \.shstrtab .*
 #...
 
 Elf file type is DYN \(Shared object file\)
@@ -60,7 +60,7 @@ Relocation section '\.rela\.dyn' at offset .* contains 13 entries:
 [0-9a-f ]+R_PPC64_DTPREL64 +0+50 ld2 \+ 0
 [0-9a-f ]+R_PPC64_TPREL64 +0+58 ie0 \+ 0
 
-Relocation section '\.rela\.plt' at offset .* contains 1 entries:
+Relocation section '\.rela\.plt' at offset .* contains 1 entry:
  +Offset +Info +Type +Symbol's Value +Symbol's Name \+ Addend
 [0-9a-f ]+R_PPC64_JMP_SLOT +0+ __tls_get_addr \+ 0
 
@@ -110,8 +110,8 @@ Symbol table '\.symtab' contains [0-9]+ entries:
 .* NOTYPE +LOCAL +DEFAULT +11 \.Lie0
 .* FILE +LOCAL +DEFAULT +ABS 
 .* OBJECT +LOCAL +DEFAULT +9 _DYNAMIC
-.* NOTYPE +LOCAL +DEFAULT +6 .*\.plt_call\.__tls_get_addr
 .* NOTYPE +LOCAL +DEFAULT +6 __glink_PLTresolve
+.* NOTYPE +LOCAL +DEFAULT +6 .*\.plt_call\.__tls_get_addr
 .* TLS +GLOBAL +DEFAULT +UND gd
 .* TLS +GLOBAL +DEFAULT +8 le0
 .* NOTYPE +GLOBAL +DEFAULT +UND __tls_get_addr

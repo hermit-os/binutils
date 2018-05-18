@@ -1,5 +1,5 @@
 dnl Autoconf configure script for GDB, the GNU debugger.
-dnl Copyright (C) 1995-2016 Free Software Foundation, Inc.
+dnl Copyright (C) 1995-2018 Free Software Foundation, Inc.
 dnl
 dnl This file is part of GDB.
 dnl
@@ -36,6 +36,8 @@ gl_INIT
 # We don't use automake, but gnulib does.  This line lets us generate
 # its Makefile.in.
 AM_INIT_AUTOMAKE(libgnu, UNUSED-VERSION, [no-define])
+
+AM_SILENT_RULES([yes])
 
 # --------------------- #
 # Checks for programs.  #

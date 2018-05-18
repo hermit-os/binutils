@@ -23,9 +23,9 @@ Section Headers:
  +\[[ 0-9]+\] \.dynamic +DYNAMIC +0*10031060 .*
  +\[[ 0-9]+\] \.got +PROGBITS +0*10031100 .*
  +\[[ 0-9]+\] \.got\.plt +PROGBITS +0*10031124 .*
- +\[[ 0-9]+\] \.shstrtab +.*
  +\[[ 0-9]+\] \.symtab +.*
  +\[[ 0-9]+\] \.strtab +.*
+ +\[[ 0-9]+\] \.shstrtab +.*
 Key to Flags:
 #...
 
@@ -66,7 +66,7 @@ Relocation section '.rel.dyn' at offset 0x[0-9a-f]+ contains 9 entries:
 [0-9a-f ]+R_386_TLS_TPOFF32 0+ +sG1
 [0-9a-f ]+R_386_TLS_TPOFF +0+ +sG8
 
-Relocation section '.rel.plt' at offset 0x[0-9a-f]+ contains 1 entries:
+Relocation section '.rel.plt' at offset 0x[0-9a-f]+ contains 1 entry:
  Offset +Info +Type +Sym.Value +Sym. Name
 [0-9a-f ]+R_386_JUMP_SLOT +[0-9a-f]+ +___tls_get_addr
 

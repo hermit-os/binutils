@@ -20,9 +20,9 @@ Section Headers:
  +\[[ 0-9]+\] \.dynamic +DYNAMIC .* 08 +WA +3 +0 +4
  +\[[ 0-9]+\] \.got +PROGBITS .* 0+30 04 +WA +0 +0 +4
  +\[[ 0-9]+\] \.plt +PROGBITS .* 0+4 00 +WA +0 +0 +4
- +\[[ 0-9]+\] \.shstrtab +.*
  +\[[ 0-9]+\] \.symtab +.*
  +\[[ 0-9]+\] \.strtab +.*
+ +\[[ 0-9]+\] \.shstrtab +.*
 #...
 
 Elf file type is DYN \(Shared object file\)
@@ -64,7 +64,7 @@ Relocation section '\.rela\.dyn' at offset 0x[0-9a-f]+ contains 18 entries:
 [0-9a-f ]+R_PPC_DTPREL32 +0+1c +gd0 \+ 0
 [0-9a-f ]+R_PPC_TPREL32 +0+2c +ie0 \+ 0
 
-Relocation section '\.rela\.plt' at offset 0x[0-9a-f]+ contains 1 entries:
+Relocation section '\.rela\.plt' at offset 0x[0-9a-f]+ contains 1 entry:
  Offset +Info +Type +Sym\. Value +Symbol's Name \+ Addend
 [0-9a-f ]+R_PPC_JMP_SLOT +0+ +__tls_get_addr \+ 0
 

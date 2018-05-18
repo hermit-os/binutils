@@ -4,7 +4,7 @@ Section Headers:
   \[Nr\] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
   \[ 0\]                   NULL            00000000 000000 000000 00      0   0  0
   \[ 1\] \.hash             HASH            00008000 001000 00003c 04   A  2   0  4
-  \[ 2\] \.dynsym           DYNSYM          0000803c 00103c 0000a0 10   A  3   6  4
+  \[ 2\] \.dynsym           DYNSYM          0000803c 00103c 0000a0 10   A  3   7  4
   \[ 3\] \.dynstr           STRTAB          000080dc 0010dc 000030 00   A  0   0  1
   \[ 4\] \.rela\.got         RELA            0000810c 00110c 000018 0c  AI  2  10  4
   \[ 5\] \.rela\.bss         RELA            00008124 001124 00000c 0c  AI  2  12  4
@@ -16,9 +16,9 @@ Section Headers:
   \[11\] \.neardata         PROGBITS        100000c0 0020c0 000004 00  WA  0   0  4
   \[12\] \.bss              NOBITS          100000c4 0020c4 000004 00  WA  0   0  4
   \[13\] \.c6xabi\.attributes C6000_ATTRIBUTES 00000000 0020c4 000019 00      0   0  1
-  \[14\] \.shstrtab         STRTAB          00000000 [0-9a-f]+ 00007b 00      0   0  1
-  \[15\] \.symtab           SYMTAB          00000000 [0-9a-f]+ [0-9a-f]+ 10     16  [0-9]+  4
-  \[16\] \.strtab           STRTAB          00000000 [0-9a-f]+ [0-9a-f]+ 00      0   0  1
+  \[14\] \.symtab           SYMTAB          00000000 [0-9a-f]+ [0-9a-f]+ 10     15  [0-9]+  4
+  \[15\] \.strtab           STRTAB          00000000 [0-9a-f]+ [0-9a-f]+ 00      0   0  1
+  \[16\] \.shstrtab         STRTAB          00000000 [0-9a-f]+ 00007b 00      0   0  1
 Key to Flags:
 #...
 
@@ -66,11 +66,11 @@ Relocation section '\.rela\.got' at offset 0x110c contains 2 entries:
 100000b8  00000701 R_C6000_ABS32          100000c0   b \+ 0
 100000bc  00000901 R_C6000_ABS32          100000c4   a \+ 0
 
-Relocation section '\.rela\.bss' at offset 0x1124 contains 1 entries:
+Relocation section '\.rela\.bss' at offset 0x1124 contains 1 entry:
  Offset     Info    Type                Sym\. Value  Symbol's Name \+ Addend
 100000c4  0000091a R_C6000_COPY           100000c4   a \+ 0
 
-Relocation section '\.rela\.plt' at offset 0x2000 contains 1 entries:
+Relocation section '\.rela\.plt' at offset 0x2000 contains 1 entry:
  Offset     Info    Type                Sym\. Value  Symbol's Name \+ Addend
 100000b4  0000081b R_C6000_JUMP_SLOT      00000000   sub0 \+ 0
 

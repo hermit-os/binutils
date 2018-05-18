@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (C) 2011-2016 Free Software Foundation, Inc.
+# Copyright (C) 2011-2018 Free Software Foundation, Inc.
 #
 # This file is part of GDB.
 #
@@ -37,27 +37,33 @@ IMPORTED_GNULIB_MODULES="\
     errno \
     fnmatch-gnu \
     frexpl \
+    getcwd \
+    glob \
     inttypes \
     lstat \
+    limits-h \
     memchr \
     memmem \
+    mkstemp \
     pathmax \
     rawmemchr \
     readlink \
     rename \
+    setenv \
     signal-h \
     strchrnul \
     strstr \
     strtok_r \
     sys_stat \
     unistd \
+    unsetenv \
     update-copyright \
     wchar \
     wctype-h \
 "
 
 # The gnulib commit ID to use for the update.
-GNULIB_COMMIT_SHA1="1029a8112290f6eee9d7878a391c49db42c999bd"
+GNULIB_COMMIT_SHA1="38237baf99386101934cd93278023aa4ae523ec0"
 
 # The expected version number for the various auto tools we will
 # use after the import.

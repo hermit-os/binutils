@@ -22,9 +22,9 @@ Section Headers:
  +\[[ 0-9]+\] .dynamic +DYNAMIC +0+201380 0+1380 0+130 10 +WA +3 +0 +8
  +\[[ 0-9]+\] .got +PROGBITS +0+2014b0 0+14b0 0+90 08 +WA +0 +0 +8
  +\[[ 0-9]+\] .got.plt +PROGBITS +0+201540 0+1540 0+20 08 +WA +0 +0 +8
- +\[[ 0-9]+\] .shstrtab +.*
  +\[[ 0-9]+\] .symtab +.*
  +\[[ 0-9]+\] .strtab +.*
+ +\[[ 0-9]+\] .shstrtab +.*
 Key to Flags:
 #...
 
@@ -63,7 +63,7 @@ Relocation section '.rela.dyn' at offset 0x[0-9a-f]+ contains 14 entries:
 [0-9a-f ]+R_X86_64_DTPOFF64 +0+ sg1 \+ 0
 [0-9a-f ]+R_X86_64_TPOFF64 +0+4 sg2 \+ 0
 
-Relocation section '.rela.plt' at offset 0x[0-9a-f]+ contains 1 entries:
+Relocation section '.rela.plt' at offset 0x[0-9a-f]+ contains 1 entry:
  +Offset +Info +Type +Symbol's Value +Symbol's Name \+ Addend
 [0-9a-f ]+R_X86_64_JUMP_SLOT +0+ __tls_get_addr \+ 0
 

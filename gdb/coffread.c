@@ -1,5 +1,5 @@
 /* Read coff symbol tables and convert to internal format, for GDB.
-   Copyright (C) 1987-2016 Free Software Foundation, Inc.
+   Copyright (C) 1987-2018 Free Software Foundation, Inc.
    Contributed by David D. Johnson, Brown University (ddj@cs.brown.edu).
 
    This file is part of GDB.
@@ -42,8 +42,6 @@
 
 #include "psymtab.h"
 #include "build-id.h"
-
-extern void _initialize_coffread (void);
 
 /* Key for COFF-associated data.  */
 
@@ -207,7 +205,8 @@ static void read_one_sym (struct coff_symbol *,
 			  struct internal_syment *,
 			  union internal_auxent *);
 
-static void coff_symtab_read (long, unsigned int, struct objfile *);
+static void coff_symtab_read (minimal_symbol_reader &,
+			      long, unsigned int, struct objfile *);
 
 /* We are called once per section from coff_symfile_read.  We
    need to examine each section we are passed, check to see
@@ -393,7 +392,9 @@ coff_start_symtab (struct objfile *objfile, const char *name)
 		 NULL,
   /* The start address is irrelevant, since we set
      last_source_start_addr in coff_end_symtab.  */
-		 0);
+		 0,
+  /* Let buildsym.c deduce the language for this symtab.  */
+		 language_unknown);
   record_debugformat ("COFF");
 }
 
@@ -461,7 +462,8 @@ is_import_fixup_symbol (struct coff_symbol *cs,
 }
 
 static struct minimal_symbol *
-record_minimal_symbol (struct coff_symbol *cs, CORE_ADDR address,
+record_minimal_symbol (minimal_symbol_reader &reader,
+		       struct coff_symbol *cs, CORE_ADDR address,
 		       enum minimal_symbol_type type, int section, 
 		       struct objfile *objfile)
 {
@@ -479,8 +481,7 @@ record_minimal_symbol (struct coff_symbol *cs, CORE_ADDR address,
       return NULL;
     }
 
-  return prim_record_minimal_symbol_and_info (cs->c_name, address,
-					      type, section, objfile);
+  return reader.record_with_info (cs->c_name, address, type, section);
 }
 
 /* coff_symfile_init ()
@@ -558,7 +559,7 @@ static bfd *symfile_bfd;
 /* Read a symbol file, after initialization by coff_symfile_init.  */
 
 static void
-coff_symfile_read (struct objfile *objfile, int symfile_flags)
+coff_symfile_read (struct objfile *objfile, symfile_add_flags symfile_flags)
 {
   struct coff_symfile_info *info;
   bfd *abfd = objfile->obfd;
@@ -568,7 +569,7 @@ coff_symfile_read (struct objfile *objfile, int symfile_flags)
   unsigned int num_symbols;
   int symtab_offset;
   int stringtab_offset;
-  struct cleanup *back_to, *cleanup_minimal_symbols;
+  struct cleanup *back_to;
   int stabstrsize;
   
   info = (struct coff_symfile_info *) objfile_data (objfile,
@@ -645,18 +646,17 @@ coff_symfile_read (struct objfile *objfile, int symfile_flags)
   if (val < 0)
     error (_("\"%s\": can't get string table"), name);
 
-  init_minimal_symbol_collection ();
-  cleanup_minimal_symbols = make_cleanup_discard_minimal_symbols ();
+  minimal_symbol_reader reader (objfile);
 
   /* Now that the executable file is positioned at symbol table,
      process it and define symbols accordingly.  */
 
-  coff_symtab_read ((long) symtab_offset, num_symbols, objfile);
+  coff_symtab_read (reader, (long) symtab_offset, num_symbols, objfile);
 
   /* Install any minimal symbols that have been collected as the
      current minimal symbols for this objfile.  */
 
-  install_minimal_symbols (objfile);
+  reader.install ();
 
   if (pe_file)
     {
@@ -699,10 +699,8 @@ coff_symfile_read (struct objfile *objfile, int symfile_flags)
 	}
     }
 
-  /* Free the installed minimal symbol data.  */
-  do_cleanups (cleanup_minimal_symbols);
-
-  bfd_map_over_sections (abfd, coff_locate_sections, (void *) info);
+  if (!(objfile->flags & OBJF_READNEVER))
+    bfd_map_over_sections (abfd, coff_locate_sections, (void *) info);
 
   if (info->stabsects)
     {
@@ -735,20 +733,17 @@ coff_symfile_read (struct objfile *objfile, int symfile_flags)
   /* Try to add separate debug file if no symbols table found.   */
   if (!objfile_has_partial_symbols (objfile))
     {
-      char *debugfile;
+      std::string debugfile = find_separate_debug_file_by_buildid (objfile);
 
-      debugfile = find_separate_debug_file_by_buildid (objfile);
-
-      if (debugfile == NULL)
+      if (debugfile.empty ())
 	debugfile = find_separate_debug_file_by_debuglink (objfile);
-      make_cleanup (xfree, debugfile);
 
-      if (debugfile)
+      if (!debugfile.empty ())
 	{
-	  bfd *abfd = symfile_bfd_open (debugfile);
+	  gdb_bfd_ref_ptr abfd (symfile_bfd_open (debugfile.c_str ()));
 
-	  make_cleanup_bfd_unref (abfd);
-	  symbol_file_add_separate (abfd, debugfile, symfile_flags, objfile);
+	  symbol_file_add_separate (abfd.get (), debugfile.c_str (),
+				    symfile_flags, objfile);
 	}
     }
 
@@ -782,7 +777,8 @@ coff_symfile_finish (struct objfile *objfile)
    We read them one at a time using read_one_sym ().  */
 
 static void
-coff_symtab_read (long symtab_offset, unsigned int nsyms,
+coff_symtab_read (minimal_symbol_reader &reader,
+		  long symtab_offset, unsigned int nsyms,
 		  struct objfile *objfile)
 {
   struct gdbarch *gdbarch = get_objfile_arch (objfile);
@@ -880,7 +876,7 @@ coff_symtab_read (long symtab_offset, unsigned int nsyms,
 	  int section = cs_to_section (cs, objfile);
 
 	  tmpaddr = cs->c_value;
-	  record_minimal_symbol (cs, tmpaddr, mst_text,
+	  record_minimal_symbol (reader, cs, tmpaddr, mst_text,
 				 section, objfile);
 
 	  fcn_line_ptr = main_aux.x_sym.x_fcnary.x_fcn.x_lnnoptr;
@@ -932,6 +928,7 @@ coff_symtab_read (long symtab_offset, unsigned int nsyms,
 	     backtraces, so filter them out (from phdm@macqel.be).  */
 	  if (within_function)
 	    break;
+	  /* Fall through.  */
 	case C_STAT:
 	case C_THUMBLABEL:
 	case C_THUMBSTAT:
@@ -968,7 +965,8 @@ coff_symtab_read (long symtab_offset, unsigned int nsyms,
 	    /* At least on a 3b1, gcc generates swbeg and string labels
 	       that look like this.  Ignore them.  */
 	    break;
-	  /* Fall in for static symbols that don't start with '.'  */
+	  /* For static symbols that don't start with '.'...  */
+	  /* Fall through.  */
 	case C_THUMBEXT:
 	case C_THUMBEXTFUNC:
 	case C_EXT:
@@ -1040,7 +1038,7 @@ coff_symtab_read (long symtab_offset, unsigned int nsyms,
 		  ms_type = mst_unknown;
 	      }
 
-	    msym = record_minimal_symbol (cs, tmpaddr, ms_type,
+	    msym = record_minimal_symbol (reader, cs, tmpaddr, ms_type,
 					  sec, objfile);
 	    if (msym)
 	      gdbarch_coff_make_msymbol_special (gdbarch,
@@ -1202,7 +1200,7 @@ coff_symtab_read (long symtab_offset, unsigned int nsyms,
     {
       /* We've got no debugging symbols, but it's a portable
 	 executable, so try to read the export table.  */
-      read_pe_exported_syms (objfile);
+      read_pe_exported_syms (reader, objfile);
     }
 
   if (get_last_source_file ())

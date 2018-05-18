@@ -1,6 +1,6 @@
 /* Remote notification in GDB protocol
 
-   Copyright (C) 1988-2016 Free Software Foundation, Inc.
+   Copyright (C) 1988-2018 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -34,7 +34,7 @@
 #include "defs.h"
 #include "remote.h"
 #include "remote-notif.h"
-#include "observer.h"
+#include "observable.h"
 #include "event-loop.h"
 #include "target.h"
 #include "inferior.h"
@@ -269,9 +269,6 @@ remote_notif_state_xfree (struct remote_notif_state *state)
 
   xfree (state);
 }
-
-/* -Wmissing-prototypes */
-extern initialize_file_ftype _initialize_notif;
 
 void
 _initialize_notif (void)

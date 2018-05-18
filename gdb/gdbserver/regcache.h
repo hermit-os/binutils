@@ -1,5 +1,5 @@
 /* Register support routines for the remote server for GDB.
-   Copyright (C) 2001-2016 Free Software Foundation, Inc.
+   Copyright (C) 2001-2018 Free Software Foundation, Inc.
 
    This file is part of GDB.
 
@@ -94,10 +94,6 @@ void registers_from_string (struct regcache *regcache, char *buf);
 
 void regcache_write_pc (struct regcache *regcache, CORE_ADDR pc);
 
-/* Return a pointer to the description of register ``n''.  */
-
-struct reg *find_register_by_number (const struct target_desc *tdesc, int n);
-
 int register_cache_size (const struct target_desc *tdesc);
 
 int register_size (const struct target_desc *tdesc, int n);
@@ -110,6 +106,9 @@ void supply_register_zeroed (struct regcache *regcache, int n);
 
 void supply_register_by_name (struct regcache *regcache,
 			      const char *name, const void *buf);
+
+void supply_register_by_name_zeroed (struct regcache *regcache,
+				     const char *name);
 
 void supply_regblock (struct regcache *regcache, const void *buf);
 

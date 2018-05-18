@@ -1,6 +1,6 @@
 // inremental.cc -- incremental linking support for gold
 
-// Copyright (C) 2009-2016 Free Software Foundation, Inc.
+// Copyright (C) 2009-2018 Free Software Foundation, Inc.
 // Written by Mikolaj Zalewski <mikolajz@google.com>.
 
 // This file is part of gold.
@@ -173,8 +173,8 @@ Incremental_binary::error(const char* format, ...) const
 
 // Return TRUE if a section of type SH_TYPE can be updated in place
 // during an incremental update.  We can update sections of type PROGBITS,
-// NOBITS, INIT_ARRAY, FINI_ARRAY, PREINIT_ARRAY, and NOTE.  All others
-// will be regenerated.
+// NOBITS, INIT_ARRAY, FINI_ARRAY, PREINIT_ARRAY, NOTE, and
+// (processor-specific) unwind sections.  All others will be regenerated.
 
 bool
 can_incremental_update(unsigned int sh_type)
@@ -184,7 +184,8 @@ can_incremental_update(unsigned int sh_type)
 	  || sh_type == elfcpp::SHT_INIT_ARRAY
 	  || sh_type == elfcpp::SHT_FINI_ARRAY
 	  || sh_type == elfcpp::SHT_PREINIT_ARRAY
-	  || sh_type == elfcpp::SHT_NOTE);
+	  || sh_type == elfcpp::SHT_NOTE
+	  || sh_type == parameters->target().unwind_section_type());
 }
 
 // Find the .gnu_incremental_inputs section and related sections.
@@ -2536,8 +2537,8 @@ Sized_relobj_incr<size, big_endian>::do_set_local_dynsym_offset(off_t)
 // Relocate the input sections and write out the local symbols.
 // We don't actually do any relocation here.  For unchanged input files,
 // we reapply relocations only for symbols that have changed; that happens
-// in queue_final_tasks.  We do need to rewrite the incremental relocations
-// for this object.
+// in Layout_task_runner::run().  We do need to rewrite the incremental
+// relocations for this object.
 
 template<int size, bool big_endian>
 void

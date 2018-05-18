@@ -1,6 +1,6 @@
 /* This testcase is part of GDB, the GNU debugger.
 
-   Copyright 2015-2016 Free Software Foundation, Inc.
+   Copyright 2015-2018 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -28,30 +28,18 @@ static int
 fork_child (void)
 {
   while (1)
-    {
-      sleep (1);
-
-      /* Exit if GDB kills the parent.  */
-      if (getppid () != save_parent)
-	break;
-      if (kill (getppid (), 0) != 0)
-	break;
-    }
+    pause ();
 
   return 0;
 }
 
-/* The fork parent.  Just runs forever waiting for the child to
-   exit.  */
+/* The fork parent.  Just runs forever.  */
 
 static int
 fork_parent (void)
 {
-  if (wait (NULL) == -1)
-    {
-      perror ("wait");
-      return 1;
-    }
+  while (1)
+    pause ();
 
   return 0;
 }

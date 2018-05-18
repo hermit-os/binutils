@@ -1,5 +1,5 @@
 /* Darwin support for GDB, the GNU debugger.
-   Copyright (C) 1997-2016 Free Software Foundation, Inc.
+   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 
    Contributed by Apple Computer, Inc.
 
@@ -23,10 +23,8 @@
 #include "inferior.h"
 #include "gdbcore.h"
 #include "target.h"
-#include "floatformat.h"
 #include "symtab.h"
 #include "regcache.h"
-#include "libbfd.h"
 #include "objfiles.h"
 
 #include "i387-tdep.h"
@@ -37,6 +35,7 @@
 #include "solib.h"
 #include "solib-darwin.h"
 #include "dwarf2-frame.h"
+#include <algorithm>
 
 /* Offsets into the struct i386_thread_state where we'll find the saved regs.
    From <mach/i386/thread_status.h> and i386-tdep.h.  */
@@ -138,8 +137,12 @@ i386_darwin_arg_type_alignment (struct type *type)
       int i;
       int res = 4;
       for (i = 0; i < TYPE_NFIELDS (type); i++)
-        res = max (res,
-                   i386_darwin_arg_type_alignment (TYPE_FIELD_TYPE (type, i)));
+	{
+	  int align
+	    = i386_darwin_arg_type_alignment (TYPE_FIELD_TYPE (type, i));
+
+	  res = std::max (res, align);
+	}
       return res;
     }
   /* 2.  The caller aligns nonvector arguments to 4-byte boundaries.  */
@@ -282,9 +285,6 @@ i386_mach_o_osabi_sniffer (bfd *abfd)
 
   return GDB_OSABI_UNKNOWN;
 }
-
-/* -Wmissing-prototypes */
-extern initialize_file_ftype _initialize_i386_darwin_tdep;
 
 void
 _initialize_i386_darwin_tdep (void)

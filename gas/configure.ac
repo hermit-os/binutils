@@ -3,7 +3,7 @@ dnl
 dnl And be careful when changing it!  If you must add tests with square
 dnl brackets, be sure changequote invocations surround it.
 dnl
-dnl   Copyright (C) 2012-2016 Free Software Foundation, Inc.
+dnl   Copyright (C) 2012-2018 Free Software Foundation, Inc.
 dnl
 dnl This file is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ AC_USE_SYSTEM_EXTENSIONS
 
 LT_INIT
 ACX_LARGEFILE
+ACX_PROG_CMP_IGNORE_INITIAL
 
 AC_ARG_ENABLE(targets,
 [  --enable-targets        alternative target configurations besides the primary],
@@ -99,12 +100,37 @@ AC_ARG_ENABLE(elf_stt_common,
   yes)  ac_default_elf_stt_common=1 ;;
 esac])dnl
 
+
+# Decide if the ELF assembler should default to generating
+# GNU Build notes if none are provided by the input.
+ac_default_generate_build_notes=0
+# Provide a configuration option to override the default.
+AC_ARG_ENABLE(generate_build_notes,
+	      AS_HELP_STRING([--enable-generate-build-notes],
+	      [generate GNU Build notes if none are provided by the input]),
+[case "${enableval}" in
+  yes)  ac_default_generate_build_notes=1 ;;
+  no)   ac_default_generate_build_notes=0 ;;
+esac])dnl
+
+
 using_cgen=no
 
 AM_BINUTILS_WARNINGS
 
 # Generate a header file
 AC_CONFIG_HEADERS(config.h:config.in)
+
+dnl Option --with-cpu=TYPE allows configure type control of the default
+dnl cpu type within the assembler.  Currently only the ARC target
+dnl supports this feature, but others may be added in the future.
+AC_ARG_WITH(cpu,
+            AS_HELP_STRING([--with-cpu=CPU],
+            [default cpu variant is CPU (currently only supported on ARC)]),
+            [AC_DEFINE_UNQUOTED(TARGET_WITH_CPU,
+                                "${with_cpu}",
+                                [Target specific CPU.])],
+            [])
 
 # PR 14072
 AH_VERBATIM([00_CONFIG_H_CHECK],
@@ -129,7 +155,7 @@ case "${host}" in
 esac
 AC_SUBST(GDBINIT)
 
-#We need this for the host.  BOUT header is in host order.
+#We need this for the host.
 AC_C_BIGENDIAN
 
 te_file=generic
@@ -178,12 +204,6 @@ for this_target in $target $canon_targets ; do
 
     generic_target=${cpu_type}-${target_vendor}-${target_os}
     case ${generic_target} in
-      i386-*-sco3.2v5*)
-	if test ${this_target} = $target; then
-	  AC_DEFINE(SCO_ELF, 1, [Define if defaulting to ELF on SCO 5.])
-	fi
-	;;
-
       i386-*-msdosdjgpp* \
       | i386-*-go32* \
       | i386-go32-rtems*)
@@ -199,10 +219,6 @@ for this_target in $target $canon_targets ; do
 	   && test ${ac_default_x86_relax_relocations} = unset; then
 	  ac_default_x86_relax_relocations=0
 	fi
-	;;
-
-      i860-*-*)
-	AC_MSG_WARN(GAS support for ${generic_target} is preliminary and a work in progress)
 	;;
 
       microblaze*)
@@ -222,10 +238,6 @@ changequote([,])dnl
 	if test x${endian} = xbig; then
 	  AC_MSG_ERROR(Solaris must be configured little endian)
 	fi
-	;;
-
-      sh*-*-symbianelf*)
-	AC_DEFINE(TARGET_SYMBIAN, 1, [Define if target is Symbian OS.])
 	;;
     esac
 
@@ -333,7 +345,8 @@ changequote([,])dnl
 	esac
 	# Decide which ABI to target by default.
 	case ${target} in
-	  mips64*-linux* | mips-sgi-irix6* | mips64*-freebsd* | mips64*-kfreebsd*-gnu)
+	  mips64*-linux* | mips-sgi-irix6* | mips64*-freebsd* \
+	  | mips64*-kfreebsd*-gnu | mips64*-ps2-elf*)
 	    mips_default_abi=N32_ABI
 	    ;;
 	  mips*-linux* | mips*-freebsd* | mips*-kfreebsd*-gnu)
@@ -499,7 +512,7 @@ changequote([,])dnl
 	AC_MSG_RESULT($enable_audio_ext)
 	;;
 
-      i386 | s390 | sparc)
+      aarch64 | i386 | riscv | s390 | sparc)
 	if test $this_target = $target ; then
 	  AC_DEFINE_UNQUOTED(DEFAULT_ARCH, "${arch}", [Default architecture.])
 	fi
@@ -597,6 +610,11 @@ AC_DEFINE_UNQUOTED(DEFAULT_GENERATE_ELF_STT_COMMON,
   [Define to 1 if you want to generate ELF common symbols with the
    STT_COMMON type by default.])
 
+AC_DEFINE_UNQUOTED(DEFAULT_GENERATE_BUILD_NOTES,
+  $ac_default_generate_build_notes,
+  [Define to 1 if you want to generate GNU Build attribute notes
+   by default, if none are contained in the input.])
+
 if test x$ac_default_compressed_debug_sections = xyes ; then
   AC_DEFINE(DEFAULT_FLAG_COMPRESS_DEBUG, 1, [Define if you want compressed debug sections by default.])
 fi
@@ -679,8 +697,6 @@ case ${obj_format} in
   coff)
     case ${target_cpu_type} in
       i386) AC_DEFINE(I386COFF, 1, [Using i386 COFF?]) ;;
-      m68k) AC_DEFINE(M68KCOFF, 1, [Using m68k COFF?]) ;;
-      m88k) AC_DEFINE(M88KCOFF, 1, [Using m88k COFF?]) ;;
       x86_64) AC_DEFINE(I386COFF, 1, [Using i386 COFF?]) ;;
     esac
     ;;
@@ -724,7 +740,6 @@ if test `set . $formats ; shift ; echo $#` -gt 1 ; then
   for fmt in $formats ; do
     case $fmt in
       aout)	AC_DEFINE(OBJ_MAYBE_AOUT, 1,    [a.out support?])   ;;
-      bout)	AC_DEFINE(OBJ_MAYBE_BOUT, 1,    [b.out support?])   ;;
       coff)	AC_DEFINE(OBJ_MAYBE_COFF, 1,    [COFF support?])    ;;
       ecoff)	AC_DEFINE(OBJ_MAYBE_ECOFF, 1,   [ECOFF support?])   ;;
       elf)	AC_DEFINE(OBJ_MAYBE_ELF, 1,     [ELF support?])     ;;
@@ -784,7 +799,7 @@ AC_DEFINE_UNQUOTED(TARGET_OS,		"${target_os}",    [Target OS.])
 AC_PROG_YACC
 AM_PROG_LEX
 
-ALL_LINGUAS="fr tr es rw id ru fi ja zh_CN"
+ALL_LINGUAS="es fi fr id ja ru rw sv tr uk zh_CN"
 ZW_GNU_GETTEXT_SISTER_DIR
 AM_PO_SUBDIRS
 
@@ -814,6 +829,7 @@ AC_C_INLINE
 # VMS doesn't have unlink.
 AC_CHECK_FUNCS(unlink remove, break)
 AC_CHECK_FUNCS(sbrk setlocale)
+AC_CHECK_FUNCS(strsignal)
 
 AM_LC_MESSAGES
 
