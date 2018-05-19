@@ -4,18 +4,16 @@ git:
   submodules: false
 env:
   matrix:
-  #- OS_TYPE=centos OS_VERSION=6 OS_CLOUDPACKAGE=el
-  #- OS_TYPE=centos OS_VERSION=7 OS_CLOUDPACKAGE=el
-  - OS_TYPE=ubuntu OS_VERSION=14.04 OS_CLOUDPACKAGE=ubuntu
-  - OS_TYPE=ubuntu OS_VERSION=16.04 OS_CLOUDPACKAGE=ubuntu
-  - OS_TYPE=ubuntu OS_VERSION=18.04 OS_CLOUDPACKAGE=ubuntu
+  - OS_TYPE=ubuntu OS_VERSION=14.04 OS_CLOUDPACKAGE=ubuntu OS_NAME=trusty
+  - OS_TYPE=ubuntu OS_VERSION=16.04 OS_CLOUDPACKAGE=ubuntu OS_NAME=xenial
+  - OS_TYPE=ubuntu OS_VERSION=18.04 OS_CLOUDPACKAGE=ubuntu OS_NAME=bionic
 services:
-  - docker
+- docker
 language: c
 compiler: gcc
 addons:
-    apt:
-        update: true
+  apt:
+    update: true
 before_install:
 - sudo docker pull ${OS_TYPE}:${OS_VERSION}
 script:
@@ -24,23 +22,10 @@ script:
 - mv binutils binutils-2.30.51
 - tar -czf binutils_2.30.51.orig.tar.gz binutils-2.30.51
 - cd binutils-2.30.51
-# Run tests in Container
 - docker run -ti -v ${TRAVIS_BUILD_DIR}/..:/work:rw ${OS_TYPE}:${OS_VERSION} /bin/bash -c "cd /work/binutils-2.30.51; ./tests.sh ${OS_TYPE} ${OS_VERSION}"
 deploy:
-  - provider: bintray
-    on: production
-    file: ".bintray_descriptor.json"
-    user:
-      secure: Qx2DhypCaucQiSIUkQqQxUPRp+XphKgVtscU7gtJ6WOV9n+6PPxCYv8jbDR0bDV4SGytRgD5rbh7r/XoqPxfVfj1VuH5k/VGb3OCEBoEW7a60PXbXfM2rWAuSuExH4GfeG+hQMr1w5DDk5u4M2owcQY9kUZ/N9VWaZ5U7+p3ZGRbzn+5GNHtVeHj7w7w/6xQmvYIDrUyBf2p0SGv/9Ktlo3Hx/oDhFTlywQUM96Pyc+UufsbTjA9wsNyTyThRcyBhQk1WSmcH5Bw5QmMHNtbDIKDajl2AyVLJrADRnJNpTN7hj23UZ6lVWH0b0LEwV/l8L0qfI1BzSV7BX8Yu2o0SzyYvVcfhRNQM6kptdawHLIMqzZUW/TI+YJjdmT8YeHNYcdBVRcaW4JbCmBIwgv7u/iL+b1Ou29t39rMYhcIE8uk+xDC8D8y7VcxZLmxDMYgzgU7FSxULJe0p2blcHO2k1py/KHErEIHrAx4ART3YsAhFTQQZb0BebNqMRfWlJSWE8EWU9QNi+H1dzrhNmOHeF6mM31cm45cQP683Wb0nz0vaty6S9s+Y39lAEkT/Yd7LZRoV0fW4jdA7INFp/DBfmeBOeZsJ2Y9+K/SC0jiymF2l0ZOTyegl+PQ6CKiwd8fpj28mpovOTZvfPWjlMIzAmj01ur9FioDTQgdDfLPovo=
-    key:
-      secure: glmIr26BV2ntaRauAoOp1yv8xuGzg2zrBEDyYbGSMIi30PLWolxRvR+r3tszzePHU3nhWOzIsJg2rSnanHNRPc7pRgL07cPZ80Pzuzu2AQMJleScnX158xKMnNcieimdi/Uy1oCpI9Iz96Amcf7r2x9Jk9R4/hrNCUeFu8z0VkTvx3a12aKt2/IFRgwp8MoVLRmIWUHu61q+nD+LroIo4/4if00Mn3KQ0cnY5qPZR3Nw+xQ4bsWgpNwYd6r8R7cVOtMFujCrpLSJ65ogoYxgvaI0OENgL44ETXPhj0jDK5fQ6rCm+0NEq29Z9lSkJKqw1eK7op4xijYZWG7qGe80x74H4j+0V4nLuzmHV2+vBJt/bRccN+FZfPhnWJ48RmGW74XcbewMq8JjRyuBaNrIJi3qHRJ/+BrcbS76jG+AuJn9N7jkRdWNomAtjt2YKqfsjFgNa6BuMwoavhqqolfIJs+v1eHEvAXwX1aiPF/FJdkvcQpeWewgCK2rOsX5nCNLW1pWnT0nr8zqfe4+hJUscRRA3JJTmjHFzGbw1jIjHRaV3eGT8xy0zLlmw+0fYzaK0jS5BlxG9kQkFxLb0enq8YG4QcQNSRXbwMr70sL50OHZXJ8aQt+ccFQH0OS9UDkVPQ+630T/xLyX7iL9gqG2A/7GfzsZHPQ2bvzYd79M5AY=
-  - provider: packagecloud
-    on:
-      branch: hermit
-      condition: -n "${PACKAGECLOUD_TOKEN}"
-    repository: "stable"
-    username: "hermitcore"
-    dist: "${OS_CLOUDPACKAGE}/${OS_VERSION}"
-    skip_cleanup: true
-    package_glob: ../*.rpm
-    token: "${PACKAGECLOUD_TOKEN}"
+  provider: bintray
+  on: hermit
+  file: ".bintray_descriptor.json"
+  key:
+    secure: d2i7Ex53lWxtVnmByN2ODQqSE1hwS+RR9B4Yd4ORqklTucRShkXRg8xrIUfw9uNQOD9pCYz3VOCzL3FTPfCjfK8MV7Efon/ndvRqUrNl3y5Elvk6CcgBYHW6h3OmKgx7h5o7idT+axWapHfDTIdB6xD7MaGobfmi20eEs3f/OV26aEg3epYS4WE4tFP+YzMPks6F803nuosa0XQPgc1B+vudMiBzTfyOpNOuQ3K0UkWN6E/HnuEsqvbk4W4y8+SB4NKy6QsoBfHYsTx1DRK1zgH457VwqM98vzvN5yZNrYzZ/y23IA1XAv/GOC2rBupxeOPBdprPPz9XoOrVVtRWdWIh6q+IsE9aZdQmopse+oTmdEx0wbKC57ZlTiRMPy8SA0rXf3ZHfRQ41N7qdjKnxaC6lh/QeNPDgR+tH681j3LkbZ21r1Cqo6kO9CaMfdXRErbWrll9fwpF6pXEbmlkaGPl7kwuVMkeCYJFkMZK7tlJn45b9BWV2d+Bs/x3pvS5D6gFwARK/BRldZr6VGIcTnZ0lhV5EMexgJU2vUia8a5BVVlZQdBRND36EJthhEvh2g2miUefGZZCYCgR6TNRvRqMB7up3hFHuAqGCYoRBXE7iE/UY3NVdy+2Bymzy2igDCXbTUW226bVSVsgFr07U9+dOjHD/jk3y4kGyvMeou4=

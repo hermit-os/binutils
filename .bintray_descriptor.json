@@ -13,7 +13,7 @@
     },
 
     "version": {
-        "name": "2.30.1",
+        "name": "2.30.51",
         "desc": "Cross-build binary utilities for HermitCore",
         "gpgSign": false
     },
@@ -22,7 +22,7 @@
     [{
       "includePattern": "../(binutils[^/]*deb$)", "uploadPattern": "$1",
       "matrixParams": {
-        "deb_distribution": "vivid",
+        "deb_distribution": "$OS_NAME",
         "deb_component": "main",
         "deb_architecture": "amd64",
 	"override": 1}
