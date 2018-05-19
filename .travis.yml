@@ -36,7 +36,7 @@ deploy:
       secure: glmIr26BV2ntaRauAoOp1yv8xuGzg2zrBEDyYbGSMIi30PLWolxRvR+r3tszzePHU3nhWOzIsJg2rSnanHNRPc7pRgL07cPZ80Pzuzu2AQMJleScnX158xKMnNcieimdi/Uy1oCpI9Iz96Amcf7r2x9Jk9R4/hrNCUeFu8z0VkTvx3a12aKt2/IFRgwp8MoVLRmIWUHu61q+nD+LroIo4/4if00Mn3KQ0cnY5qPZR3Nw+xQ4bsWgpNwYd6r8R7cVOtMFujCrpLSJ65ogoYxgvaI0OENgL44ETXPhj0jDK5fQ6rCm+0NEq29Z9lSkJKqw1eK7op4xijYZWG7qGe80x74H4j+0V4nLuzmHV2+vBJt/bRccN+FZfPhnWJ48RmGW74XcbewMq8JjRyuBaNrIJi3qHRJ/+BrcbS76jG+AuJn9N7jkRdWNomAtjt2YKqfsjFgNa6BuMwoavhqqolfIJs+v1eHEvAXwX1aiPF/FJdkvcQpeWewgCK2rOsX5nCNLW1pWnT0nr8zqfe4+hJUscRRA3JJTmjHFzGbw1jIjHRaV3eGT8xy0zLlmw+0fYzaK0jS5BlxG9kQkFxLb0enq8YG4QcQNSRXbwMr70sL50OHZXJ8aQt+ccFQH0OS9UDkVPQ+630T/xLyX7iL9gqG2A/7GfzsZHPQ2bvzYd79M5AY=
   - provider: packagecloud
     on:
-      branch: production
+      branch: hermit
       condition: -n "${PACKAGECLOUD_TOKEN}"
     repository: "stable"
     username: "hermitcore"
