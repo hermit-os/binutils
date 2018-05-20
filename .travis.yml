@@ -27,6 +27,7 @@ script:
 deploy:
   provider: bintray
   on: hermit
+  skip_cleanup: true # to upload artifacts created during the build
   file: ".bintray_descriptor_${DIST_NAME}.json"
   key:
     secure: d2i7Ex53lWxtVnmByN2ODQqSE1hwS+RR9B4Yd4ORqklTucRShkXRg8xrIUfw9uNQOD9pCYz3VOCzL3FTPfCjfK8MV7Efon/ndvRqUrNl3y5Elvk6CcgBYHW6h3OmKgx7h5o7idT+axWapHfDTIdB6xD7MaGobfmi20eEs3f/OV26aEg3epYS4WE4tFP+YzMPks6F803nuosa0XQPgc1B+vudMiBzTfyOpNOuQ3K0UkWN6E/HnuEsqvbk4W4y8+SB4NKy6QsoBfHYsTx1DRK1zgH457VwqM98vzvN5yZNrYzZ/y23IA1XAv/GOC2rBupxeOPBdprPPz9XoOrVVtRWdWIh6q+IsE9aZdQmopse+oTmdEx0wbKC57ZlTiRMPy8SA0rXf3ZHfRQ41N7qdjKnxaC6lh/QeNPDgR+tH681j3LkbZ21r1Cqo6kO9CaMfdXRErbWrll9fwpF6pXEbmlkaGPl7kwuVMkeCYJFkMZK7tlJn45b9BWV2d+Bs/x3pvS5D6gFwARK/BRldZr6VGIcTnZ0lhV5EMexgJU2vUia8a5BVVlZQdBRND36EJthhEvh2g2miUefGZZCYCgR6TNRvRqMB7up3hFHuAqGCYoRBXE7iE/UY3NVdy+2Bymzy2igDCXbTUW226bVSVsgFr07U9+dOjHD/jk3y4kGyvMeou4=
