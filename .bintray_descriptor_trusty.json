@@ -1,11 +1,11 @@
 {
     "package": {
         "name": "binutils",
-	"repo": "hermitcore",
-        "subject": "rwth-os",
-        "website_url": "http://www.hermitcore.org",
+	"repo": "toolchain",
+        "subject": "hermitcore",
+        "website_url": "https://hermitcore.org",
         "issue_tracker_url": "https://github.com/RWTH-OS/HermitCore/issues",
-        "vcs_url": "https://github.com/RWTH-OS/binutils.git",
+        "vcs_url": "https://github.com/hermitcore/binutils.git",
         "github_release_notes_file": "RELEASE",
         "licenses": ["GPL2"],
         "public_download_numbers": false,
@@ -15,7 +15,7 @@
     "version": {
         "name": "2.30.51",
         "desc": "Cross-build binary utilities for HermitCore",
-        "gpgSign": true
+        "gpgSign": false
     },
 
     "files":
