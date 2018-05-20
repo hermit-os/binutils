@@ -1,6 +1,6 @@
 {
     "package": {
-        "name": "binutils",
+        "name": "binutils-hermit",
 	"repo": "toolchain",
         "subject": "hermitcore",
         "website_url": "https://hermitcore.org",
