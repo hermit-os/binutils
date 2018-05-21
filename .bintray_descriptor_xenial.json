@@ -3,7 +3,7 @@
         "name": "binutils-hermit",
 	"repo": "toolchain",
         "subject": "hermitcore",
-	"desc": "Cross-build binary utilities for HermitCore",
+	"desc": "Cross-toolchain for HermitCore",
         "website_url": "https://hermitcore.org",
         "issue_tracker_url": "https://github.com/RWTH-OS/HermitCore/issues",
         "vcs_url": "https://github.com/hermitcore/binutils.git",
