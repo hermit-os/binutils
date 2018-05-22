@@ -13,6 +13,7 @@ addons:
   apt:
     update: true
 before_install:
+- sudo apt-get -qq update
 - sudo docker pull ${OS_TYPE}:${OS_VERSION}
 script:
 - mv .git ..
