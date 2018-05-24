@@ -5,6 +5,7 @@ git:
 env:
   matrix:
   - OS_TYPE=debian OS_VERSION=9 OS_NAME=stretch
+  - OS_TYPE=centos OS_VERSION=latest OS_NAME=centos7
   - OS_TYPE=ubuntu OS_VERSION=16.04 OS_NAME=xenial
   - OS_TYPE=ubuntu OS_VERSION=18.04 OS_NAME=bionic
 services:

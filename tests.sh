@@ -10,14 +10,17 @@ yum -y clean all
 yum -y clean expire-cache
 
 # First, install all the needed packages.
-yum install -y flex bison binutils gcc gcc-c++ texinfo kernel-headers rpm-build kernel-devel boost-devel cmake git tar gzip make autotools
+yum install -y checkinstall flex bison binutils gcc gcc-c++ texinfo kernel-headers rpm-build kernel-devel boost-devel cmake git tar gzip make autotools
 
-# Prepare the RPM environment
-mkdir -p /tmp/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-cat >> /etc/rpm/macros.dist << EOF
-%dist .osg.el${OS_VERSION}
-%osg 1
-EOF
+wget http://www.asic-linux.com.mx/~izto/checkinstall/files/rpm/checkinstall-1.6.1-1.i386.rpm
+rpm -Uvh ./checkinstall-1.6.1-1.x86_64.rpm
+rm -f ./checkinstall-1.6.1-1.x86_64.rpm
+
+mkdir -p build
+cd build
+../configure --target=x86_64-hermit --prefix=/opt/hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib
+make
+checkinstall -R -y --exclude=build --pkggroup=main --maintainer=stefan@eonerc.rwth-aachen.de --pkgsource=https://hermitcore.org --pkgname=binutils-hermit --pkgversion=2.30.51 --pkglicense=GPL2 make install
 
 else
 
@@ -31,9 +34,5 @@ cd build
 ../configure --target=x86_64-hermit --prefix=/opt/hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib
 make
 checkinstall -D -y --exclude=build --pkggroup=main --maintainer=stefan@eonerc.rwth-aachen.de --pkgsource=https://hermitcore.org --pkgname=binutils-hermit --pkgversion=2.30.51 --pkglicense=GPL2 make install
-
-#time debuild -us -uc -j2 --lintian-opts --profile debian
-#echo $?
-#md5sum ../*.deb
 
 fi
