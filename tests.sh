@@ -26,7 +26,7 @@ export DEBIAN_FRONTEND="noninteractive"
 apt-get -qq update
 apt-get install -y gawk dialog apt-utils flex bison binutils texinfo gcc g++ libmpfr-dev libmpc-dev libgmp-dev libisl-dev packaging-dev build-essential libtool autotools-dev autoconf pkg-config
 
-time debuild -us -uc -j2
+time debuild -us -uc -j2 --lintian-opts --profile debian
 echo $?
 md5sum ../*.deb
 
