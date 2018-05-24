@@ -20,7 +20,7 @@ before_install:
 script:
 - docker run -ti -v ${TRAVIS_BUILD_DIR}/..:/work:rw ${OS_TYPE}:${OS_VERSION} /bin/bash -c "cd /work/binutils; ./tests.sh ${OS_TYPE} ${OS_VERSION}"
 deploy:
-  provider: bintray
+- provider: bintray
   on: hermit
   skip_cleanup: true # to upload artifacts created during the build
   file: ".bintray_descriptor_${OS_NAME}.json"
@@ -28,3 +28,14 @@ deploy:
     secure: d2i7Ex53lWxtVnmByN2ODQqSE1hwS+RR9B4Yd4ORqklTucRShkXRg8xrIUfw9uNQOD9pCYz3VOCzL3FTPfCjfK8MV7Efon/ndvRqUrNl3y5Elvk6CcgBYHW6h3OmKgx7h5o7idT+axWapHfDTIdB6xD7MaGobfmi20eEs3f/OV26aEg3epYS4WE4tFP+YzMPks6F803nuosa0XQPgc1B+vudMiBzTfyOpNOuQ3K0UkWN6E/HnuEsqvbk4W4y8+SB4NKy6QsoBfHYsTx1DRK1zgH457VwqM98vzvN5yZNrYzZ/y23IA1XAv/GOC2rBupxeOPBdprPPz9XoOrVVtRWdWIh6q+IsE9aZdQmopse+oTmdEx0wbKC57ZlTiRMPy8SA0rXf3ZHfRQ41N7qdjKnxaC6lh/QeNPDgR+tH681j3LkbZ21r1Cqo6kO9CaMfdXRErbWrll9fwpF6pXEbmlkaGPl7kwuVMkeCYJFkMZK7tlJn45b9BWV2d+Bs/x3pvS5D6gFwARK/BRldZr6VGIcTnZ0lhV5EMexgJU2vUia8a5BVVlZQdBRND36EJthhEvh2g2miUefGZZCYCgR6TNRvRqMB7up3hFHuAqGCYoRBXE7iE/UY3NVdy+2Bymzy2igDCXbTUW226bVSVsgFr07U9+dOjHD/jk3y4kGyvMeou4=
   user:
     secure: OkcDrXJYcuFsYHqMyAXplobW7tgkFoRMdqJ5lc4gDSws5Mga7ruYg5dunxPGQl3fNjvxMNJLYpYLs/uxsLlzl0aX4s3kMKpUpTTA/P2D/0YbotJ8woiDAQzKTHVY9cSXI0EtUONVh+u4EOwC9UwWeYimPsPSOB+Fdl2avVTGWj377QBZ0yuVOQbuzkVzmLO8wnA1TdSQ7gKSxQDGGnuRhO3naCYgO+lOGmtwN4kYcU+OrbnXppdE/XQ5DiYfPkwiqwhGH9hvwuvfUb4jqPPyEsDTvNNEs7j1AJPzCtixZ+dPROuinqc4lTRn4CGI3r4OauJ3FTk9CSlq/e78Ydj1zCGSWQkPa9i4tyUeswhOKAoGSMxJM2h3kBUDue0igkBlr5cntkc1wA7YPDlFaIRqdb8uaUZ82gdSCmuGo4+Zc/AbXbJLydWbVcqrXIl1CbsidEmc2M5JfiBMni9GUyTEkKGK9kpK5TzKO4ZAJtw2yQH0rifu4eCnEB7whnyudE3u1GO82vNZKbGAVXbSeNyVGX7Ulka3QAuR2gRzKH63CV+ZziOdd/qp/3PkqaYHyA82IwapZMpzXftqhE2A8WkYvXiY5TA3LeVOPHGQzJdRkbO0DiwNd8gMY7iUH+abuKyyO/YWlcFG7qC6GhZlw+dbIz1iyq6254+iksIovYe7GUg=
+- provider: packagecloud
+  on:
+    branch: hermit
+    condition: -n "${PACKAGECLOUD_TOKEN}"
+  skip_cleanup: true
+  dist: "${OS_TYPE}/${OS_NAME}"
+  repository: "main"
+  username: "hermitcore"
+  token: "${PACKAGECLOUD_TOKEN}"
+  package_glob: build/*.deb
+  force: true
