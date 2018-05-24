@@ -24,10 +24,16 @@ elif [ "$OS_NAME" = "ubuntu" ]; then
 export DEBIAN_FRONTEND="noninteractive"
 
 apt-get -qq update
-apt-get install -y gawk dialog apt-utils flex bison binutils texinfo gcc g++ libmpfr-dev libmpc-dev libgmp-dev libisl-dev packaging-dev build-essential libtool autotools-dev autoconf pkg-config
+apt-get install -y checkinstall gawk dialog apt-utils flex bison binutils texinfo gcc g++ libmpfr-dev libmpc-dev libgmp-dev libisl-dev packaging-dev build-essential libtool autotools-dev autoconf pkg-config
 
-time debuild -us -uc -j2 --lintian-opts --profile debian
-echo $?
-md5sum ../*.deb
+mkdir -p build
+cd build
+../configure --target=x86_64-hermit --prefix=/opt/hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib
+make
+checkinstall -D --pkgname binutils-hermit --pkgversion 2.30.51 --pkglicense GPL2 make install
+
+#time debuild -us -uc -j2 --lintian-opts --profile debian
+#echo $?
+#md5sum ../*.deb
 
 fi
