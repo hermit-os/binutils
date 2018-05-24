@@ -4,7 +4,7 @@ git:
   submodules: false
 env:
   matrix:
-  - OS_TYPE=ubuntu OS_VERSION=14.04 OS_NAME=trusty
+  - OS_TYPE=debian OS_VERSION=9 OS_NAME=stretch
   - OS_TYPE=ubuntu OS_VERSION=16.04 OS_NAME=xenial
   - OS_TYPE=ubuntu OS_VERSION=18.04 OS_NAME=bionic
 services:

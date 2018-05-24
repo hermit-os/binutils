@@ -24,7 +24,7 @@
     [{
       "includePattern": "../(binutils[^/]*deb$)", "uploadPattern": "$1",
       "matrixParams": {
-        "deb_distribution": "trusty",
+        "deb_distribution": "stretch",
         "deb_component": "main",
         "deb_architecture": "amd64",
 	"override": 1}
