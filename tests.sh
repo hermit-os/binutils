@@ -19,7 +19,7 @@ cat >> /etc/rpm/macros.dist << EOF
 %osg 1
 EOF
 
-elif [ "$OS_NAME" = "ubuntu" ]; then
+else
 
 export DEBIAN_FRONTEND="noninteractive"
 
