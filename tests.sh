@@ -10,7 +10,7 @@ yum -y clean all
 yum -y clean expire-cache
 
 # First, install all the needed packages.
-yum install -y wget flex bison binutils gcc gcc-c++ texinfo kernel-headers rpm-build kernel-devel boost-devel cmake git tar gzip make autotools
+yum install -y wget gettext flex bison binutils gcc gcc-c++ texinfo kernel-headers rpm-build kernel-devel boost-devel cmake git tar gzip make autotools
 
 wget http://checkinstall.izto.org/files/source/checkinstall-1.6.2.tar.gz
 tar xzvf checkinstall-1.6.2.tar.gz
