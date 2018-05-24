@@ -1,14 +1,11 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: binutils
-Source: https://github.com/RWTH-OS/binutils
+Upstream-Name: binutils-hermit
+Upstream-Contact: Stefan Lankes <slankes@eonerc.rwth-aachen.de>
+Source: https://github.com/hermitcore/binutils
 
 Files: *
 Copyright: <years> <put author's name and email here>
            <years> <likewise for another author>
-License: GPL-2.0+
-
-Files: debian/*
-Copyright: 2016 Stefan Lankes <slankes@eonerc.rwth-aachen.de>
 License: GPL-2.0+
 
 License: GPL-2.0+
