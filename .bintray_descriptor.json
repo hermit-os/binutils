@@ -16,8 +16,7 @@
  		
      "version": {
          "name": "2.30.51",
-         "desc": "Cross-build binary utilities for HermitCore",
-         "gpgSign": false
+         "desc": "Cross-build binary utilities for HermitCore"
      },
  	
      "files":
