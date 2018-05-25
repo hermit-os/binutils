@@ -23,7 +23,7 @@
      [{
        "includePattern": "../(binutils[^/]*deb$)", "uploadPattern": "$1",
        "matrixParams": {
-         "deb_distribution": "bionic",
+         "deb_distribution": "vivid",
          "deb_component": "main",	
          "deb_architecture": "amd64",
  	 "override": 1}
