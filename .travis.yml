@@ -21,9 +21,11 @@ script:
   -c "cd /work/binutils; ./tests.sh ${OS_TYPE} ${OS_VERSION}"
 deploy:
   provider: bintray
-  on: hermit
+  on:
+    branch: hermit
+    condition: $OS_TYPE = bionic
   skip_cleanup: true
-  file: ".bintray_descriptor_${OS_NAME}.json"
+  file: ".bintray_descriptor.json"
   key:
     secure: PS8LR8fsW15Rr9MAq6reuAkRujAZppPOtxNvz4+NPj53/G3BP7yyxKNgmhTPkqpC2SRSXSHsue4O9LrfddTiX10W/tXbDoO7o+E3sXhqfYoizPfeSxi9em41eSFuJeRH9MknAxX8lLST2DdUEXcjFVFqUdBvAsn2FmneKx/+Pn2MG67hPZx+dn45PgPjBIaGiix3xiM5+144cR7XrOxrE3WKVUbntZYwUyvU9tGmHHkiMMTCrq3wX3XYZhaHeqzcN/YKpKRfhlx/Sa5jJBchpCZWeRKnj3H6XdSUE3C0M5w8YkOjWsQYPaXAc+o2XSnrkgx0dV9p9o26hFZq4hYH1LmI2d+Ct2bTpX12YzBYViQplUtjJkUjOtmqS/e669XeuN77h64xNDUS3yOLvb2rOmferNjkrPc0U+6S71P70YgDEz/oJx0rvxcc98RD/DMHh4rOn/4WdCLYtbB5yexw+lljnjoQAJd4m9iNvW/w5xhUQeY1hEAINeb6oUZYuyEf12iATUPJfyBaUZz+AaqUoC+hOVDdvX095Ly74QXoC65AEmXk4fRdFTtrOOTH9uyP9cyZPQRF7KBT0dEEtB2oPb2qP0WkgCMyNRwxaYlMKGE5LXk3AklQ3LR+SGTeDHVBdX6BmV7qFx+fGEI88UJXsCJGp8eKWAOtsiktN6saE34=
   user:
