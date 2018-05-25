@@ -23,7 +23,7 @@ deploy:
   provider: bintray
   on:
     branch: hermit
-    condition: $OS_TYPE = bionic
+    condition: $OS_NAME = bionic
   skip_cleanup: true
   file: ".bintray_descriptor.json"
   key:
