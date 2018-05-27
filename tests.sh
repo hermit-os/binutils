@@ -40,4 +40,9 @@ cd build
 make
 checkinstall -D -y --exclude=build --pkggroup=main --maintainer=stefan@eonerc.rwth-aachen.de --pkgsource=https://hermitcore.org --pkgname=binutils-hermit --pkgversion=2.30.51 --pkglicense=GPL2 make install
 
+cd ..
+mkdir -p tmp
+dpkg-deb -R build/binutils-hermit_2.30.51-1_amd64.deb
+rm build/binutils-hermit_2.30.51-1_amd64.deb
+
 fi
