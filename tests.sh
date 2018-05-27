@@ -42,7 +42,7 @@ checkinstall -D -y --exclude=build --pkggroup=main --maintainer=stefan@eonerc.rw
 
 cd ..
 mkdir -p tmp
-dpkg-deb -R build/binutils-hermit_2.30.51-1_amd64.deb
-rm build/binutils-hermit_2.30.51-1_amd64.deb
+dpkg-deb -R build/binutils-hermit_2.30.51-1_amd64.deb tmp
+rm -f build/binutils-hermit_2.30.51-1_amd64.deb
 
 fi
