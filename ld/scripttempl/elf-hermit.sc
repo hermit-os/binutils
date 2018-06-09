@@ -153,7 +153,6 @@ SECTIONS
     *(COMMON)
     *(LARGE_COMMON)
   }
-  kernel_end = .;
   /* Stabs debugging sections.  */
   .stab          0 : { *(.stab) }
   .stabstr       0 : { *(.stabstr) }
