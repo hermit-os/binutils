@@ -26,6 +26,16 @@ SECTIONS
     . = ALIGN((1 << 12));
     *(.kmsg)
   }
+  .percore : {
+    . = ALIGN(64);
+    percore_start = .;
+    *(.percore)
+    . = ALIGN(64);
+    percore_end0 = .;
+	/* reserve space for more cores */
+    . += cores * (percore_end0 - percore_start) - (percore_end0 - percore_start);
+    percore_end = .;
+  }
   .ktext ALIGN(4096) : AT(ADDR(.ktext)) {
     *(.ktext)
     *(.ktext.*)
@@ -125,16 +135,6 @@ SECTIONS
   }
   .data1          : { *(.data1) }
   _edata = .; PROVIDE (edata = .);
-  .percore : {
-    . = ALIGN(64);
-    percore_start = .;
-    *(.percore)
-    . = ALIGN(64);
-    percore_end0 = .;
-    /* reserve space for more cores */
-    . += cores * (percore_end0 - percore_start) - (percore_end0 - percore_start);
-    percore_end = .;
-  }
   .tdata : {
      tls_start = .;
      *(.tdata .tdata.* .gnu.linkonce.td.*)
