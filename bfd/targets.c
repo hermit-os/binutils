@@ -592,7 +592,6 @@ extern const bfd_target aarch64_mach_o_vec;
 extern const bfd_target aarch64_elf64_le_hermit_vec;
 extern const bfd_target alpha_ecoff_le_vec;
 extern const bfd_target alpha_elf64_vec;
-extern const bfd_target alpha_elf64_hermit_vec;
 extern const bfd_target alpha_elf64_fbsd_vec;
 extern const bfd_target alpha_vms_vec;
 extern const bfd_target alpha_vms_lib_txt_vec;

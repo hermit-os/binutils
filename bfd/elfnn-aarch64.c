@@ -9708,7 +9708,7 @@ const struct elf_size_info elfNN_aarch64_size_info =
 
 #include "elfNN-target.h"
 
-/* HeremitCore support.  */
+/* HermitCore support.  */
 
 #undef	TARGET_LITTLE_SYM
 #define	TARGET_LITTLE_SYM	aarch64_elfNN_le_hermit_vec
