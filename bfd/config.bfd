@@ -709,6 +709,7 @@ case "${targ}" in
     ;;
   x86_64-*-hermit*)
     targ_defvec=x86_64_elf64_hermit_vec
+    targ_selvecs="i386_elf32_vec x86_64_elf32_vec"
     want64=true
     ;;
   x86_64-*-redox*)
