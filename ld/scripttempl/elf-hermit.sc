@@ -138,6 +138,7 @@ SECTIONS
   .tdata : {
      tls_start = .;
      *(.tdata .tdata.* .gnu.linkonce.td.*)
+     tdata_end = .;
   }
   .tbss : {
     hbss_start = .;
