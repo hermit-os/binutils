@@ -34,7 +34,7 @@ else
 	export DEBIAN_FRONTEND="noninteractive"
 
 	apt-get -qq update
-	apt-get install -y checkinstall gawk dialog apt-utils flex bison binutils texinfo gcc g++ libmpfr-dev libmpc-dev libgmp-dev libisl-dev packaging-dev build-essential libtool autotools-dev autoconf pkg-config
+	apt-get install -y --no-install-recommends bison checkinstall flex gcc libc-dev texinfo
 
 	mkdir -p build
 	cd build
