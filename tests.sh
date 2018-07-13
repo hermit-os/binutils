@@ -33,14 +33,14 @@ else
 
 	export DEBIAN_FRONTEND="noninteractive"
 
-	apt-get -qq update
-	apt-get install -y --no-install-recommends bison checkinstall flex gcc libc-dev texinfo
+	apt-get -qq update || exit 1
+	apt-get install -y --no-install-recommends bison checkinstall flex gcc libc-dev texinfo || exit 1
 
 	mkdir -p build
 	cd build
-	../configure --target=${TARGET} --prefix=/opt/hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib
-	make
-	checkinstall -D -y --exclude=build --pkggroup=main --maintainer=stefan@eonerc.rwth-aachen.de --pkgsource=https://hermitcore.org --pkgname=${PKGNAME} --pkgversion=2.30.51 --pkglicense=GPL2 make install
+	../configure --target=${TARGET} --prefix=/opt/hermit --disable-shared --disable-nls --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-libssp --enable-tls --disable-multilib || exit 1
+	make -j2 || exit 1
+	checkinstall -D -y --exclude=build --pkggroup=main --maintainer=stefan@eonerc.rwth-aachen.de --pkgsource=https://hermitcore.org --pkgname=${PKGNAME} --pkgversion=2.30.51 --pkglicense=GPL2 make install || exit 1
 
 	# Unpack the created .deb and let Travis repackage it.
 	# This is a workaround for Bintray, which doesn't understand the default .deb compression of Ubuntu 18.04.
