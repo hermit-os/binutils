@@ -570,7 +570,7 @@ osabis[] =
   { ELFOSABI_NSK, "NSK" },
   { ELFOSABI_AROS, "AROS" },
   { ELFOSABI_FENIXOS, "FenixOS" },
-  { ELFOSABI_HERMIT, "HermitCore" }
+  { ELFOSABI_STANDALONE, "Standalone" }
 };
 
 /* Return ELFOSABI_XXX for an OSABI string, OSABI.  */

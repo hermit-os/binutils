@@ -9720,7 +9720,7 @@ const struct elf_size_info elfNN_aarch64_size_info =
 #define	TARGET_BIG_NAME		"elfNN-bigaarch64-hermit"
 
 #undef	ELF_OSABI
-#define	ELF_OSABI		ELFOSABI_HERMIT
+#define	ELF_OSABI		ELFOSABI_STANDALONE
 
 #undef	elfNN_bed
 #define	elfNN_bed		elfNN_aarch64_hermit_bed

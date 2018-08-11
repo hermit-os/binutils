@@ -5056,7 +5056,7 @@ elf_x86_64_special_sections[]=
 #define TARGET_LITTLE_NAME		    "elf64-x86-64-hermit"
 
 #undef  ELF_OSABI
-#define ELF_OSABI			    ELFOSABI_HERMIT
+#define ELF_OSABI               ELFOSABI_STANDALONE
 
 #undef  elf64_bed
 #define elf64_bed elf64_x86_64_hermit_bed
