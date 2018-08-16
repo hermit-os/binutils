@@ -1,6 +1,6 @@
 {
      "package": {
-         "name": "binutils-hermit",
+         "name": "binutils-REPLACE_NAME",
          "repo": "REPLACE_REPO",
          "subject": "hermitcore",
          "desc": "Cross-build binary utilities for HermitCore",
