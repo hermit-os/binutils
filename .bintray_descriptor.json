@@ -1,11 +1,11 @@
 {
      "package": {
-         "name": "binutils-hermit-aarch64",
-         "repo": "ubuntu",
+         "name": "binutils-hermit",
+         "repo": "REPLACE_REPO",
          "subject": "hermitcore",
-         "desc": "Cross-build binary utilities for HermitCore (aarch64-hermit target)",
+         "desc": "Cross-build binary utilities for HermitCore (x86_64-hermit target)",
          "website_url": "https://hermitcore.org",
-         "issue_tracker_url": "https://github.com/RWTH-OS/HermitCore/issues",
+         "issue_tracker_url": "https://github.com/hermitcore/libhermit/issues",
          "vcs_url": "https://github.com/hermitcore/binutils.git",
          "github_use_tag_release_notes": false,
          "github_release_notes_file": "RELEASE",
@@ -16,13 +16,13 @@
 
      "version": {
          "name": "2.30.51",
-         "desc": "Cross-build binary utilities for HermitCore (aarch64-hermit target)",
+         "desc": "Cross-build binary utilities for HermitCore (x86_64-hermit target)",
          "gpgSign": false
      },
 
      "files":
      [{
-       "includePattern": "../(binutils-hermit-aarch64_[^/]*deb$)",
+       "includePattern": "../(binutils-hermit_[^/]*deb$)",
        "uploadPattern": "$1",
        "matrixParams": {
          "deb_distribution": "bionic",

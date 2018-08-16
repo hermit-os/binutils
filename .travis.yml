@@ -5,6 +5,7 @@ git:
 env:
   matrix:
   - OS_TYPE=ubuntu OS_VERSION=18.04 OS_NAME=bionic
+  - OS_TYPE=debian OS_VERSION=8 OS_NAME=jessie
 services:
 - docker
 addons:
@@ -21,12 +22,13 @@ before_deploy:
 - cd ${TRAVIS_BUILD_DIR}
 - dpkg-deb -b x86_64-hermit_unpacked binutils-hermit_2.30.51-1_amd64.deb
 - dpkg-deb -b aarch64-hermit_unpacked binutils-hermit-aarch64_2.30.51-1_amd64.deb
+- sed -i "s/REPLACE_REPO/$OS_TYPE/" .bintray_descriptor.json
 deploy:
   - provider: bintray
     on:
       branch: hermit
     skip_cleanup: true
-    file: ".bintray_descriptor_amd64.json"
+    file: ".bintray_descriptor.json"
     key:
       secure: PS8LR8fsW15Rr9MAq6reuAkRujAZppPOtxNvz4+NPj53/G3BP7yyxKNgmhTPkqpC2SRSXSHsue4O9LrfddTiX10W/tXbDoO7o+E3sXhqfYoizPfeSxi9em41eSFuJeRH9MknAxX8lLST2DdUEXcjFVFqUdBvAsn2FmneKx/+Pn2MG67hPZx+dn45PgPjBIaGiix3xiM5+144cR7XrOxrE3WKVUbntZYwUyvU9tGmHHkiMMTCrq3wX3XYZhaHeqzcN/YKpKRfhlx/Sa5jJBchpCZWeRKnj3H6XdSUE3C0M5w8YkOjWsQYPaXAc+o2XSnrkgx0dV9p9o26hFZq4hYH1LmI2d+Ct2bTpX12YzBYViQplUtjJkUjOtmqS/e669XeuN77h64xNDUS3yOLvb2rOmferNjkrPc0U+6S71P70YgDEz/oJx0rvxcc98RD/DMHh4rOn/4WdCLYtbB5yexw+lljnjoQAJd4m9iNvW/w5xhUQeY1hEAINeb6oUZYuyEf12iATUPJfyBaUZz+AaqUoC+hOVDdvX095Ly74QXoC65AEmXk4fRdFTtrOOTH9uyP9cyZPQRF7KBT0dEEtB2oPb2qP0WkgCMyNRwxaYlMKGE5LXk3AklQ3LR+SGTeDHVBdX6BmV7qFx+fGEI88UJXsCJGp8eKWAOtsiktN6saE34=
     user:
