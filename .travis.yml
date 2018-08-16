@@ -4,8 +4,10 @@ git:
   submodules: false
 env:
   matrix:
-  - OS_TYPE=ubuntu OS_VERSION=18.04 OS_NAME=bionic
-  - OS_TYPE=debian OS_VERSION=8 OS_NAME=jessie
+  - OS_TYPE=ubuntu OS_VERSION=18.04 OS_NAME=bionic TARGET=hermit ARCH=x86_64
+  - OS_TYPE=ubuntu OS_VERSION=18.04 OS_NAME=bionic TARGET=hermit-aarch64 ARCH=aarch64
+  - OS_TYPE=debian OS_VERSION=8 OS_NAME=jessie TARGET=hermit ARCH=x86_64
+  - OS_TYPE=debian OS_VERSION=8 OS_NAME=jessie TARGET=hermit-aarch64 aRCH=aarch64
 services:
 - docker
 addons:
@@ -16,12 +18,10 @@ before_install:
 - sudo apt-get install -y curl
 - sudo docker pull ${OS_TYPE}:${OS_VERSION}
 script:
-- docker run -ti -v ${TRAVIS_BUILD_DIR}:/work:rw ${OS_TYPE}:${OS_VERSION} /bin/bash -c "cd /work; ./tests.sh ${OS_TYPE} ${OS_VERSION} x86_64-hermit binutils-hermit"
-- docker run -ti -v ${TRAVIS_BUILD_DIR}:/work:rw ${OS_TYPE}:${OS_VERSION} /bin/bash -c "cd /work; ./tests.sh ${OS_TYPE} ${OS_VERSION} aarch64-hermit binutils-hermit-aarch64"
+- docker run -ti -v ${TRAVIS_BUILD_DIR}:/work:rw ${OS_TYPE}:${OS_VERSION} /bin/bash -c "cd /work; ./tests.sh ${OS_TYPE} ${OS_VERSION} ${ARCH}-hermit binutils-${TARGET}"
 before_deploy:
 - cd ${TRAVIS_BUILD_DIR}
-- dpkg-deb -b x86_64-hermit_unpacked binutils-hermit_2.30.51-1_amd64.deb
-- dpkg-deb -b aarch64-hermit_unpacked binutils-hermit-aarch64_2.30.51-1_amd64.deb
+- dpkg-deb -b ${ARCH}-hermit_unpacked binutils-${TARGET}_2.30.51-1_amd64.deb
 - sed -i "s/REPLACE_REPO/$OS_TYPE/" .bintray_descriptor.json
 deploy:
   - provider: bintray
@@ -29,15 +29,6 @@ deploy:
       branch: hermit
     skip_cleanup: true
     file: ".bintray_descriptor.json"
-    key:
-      secure: PS8LR8fsW15Rr9MAq6reuAkRujAZppPOtxNvz4+NPj53/G3BP7yyxKNgmhTPkqpC2SRSXSHsue4O9LrfddTiX10W/tXbDoO7o+E3sXhqfYoizPfeSxi9em41eSFuJeRH9MknAxX8lLST2DdUEXcjFVFqUdBvAsn2FmneKx/+Pn2MG67hPZx+dn45PgPjBIaGiix3xiM5+144cR7XrOxrE3WKVUbntZYwUyvU9tGmHHkiMMTCrq3wX3XYZhaHeqzcN/YKpKRfhlx/Sa5jJBchpCZWeRKnj3H6XdSUE3C0M5w8YkOjWsQYPaXAc+o2XSnrkgx0dV9p9o26hFZq4hYH1LmI2d+Ct2bTpX12YzBYViQplUtjJkUjOtmqS/e669XeuN77h64xNDUS3yOLvb2rOmferNjkrPc0U+6S71P70YgDEz/oJx0rvxcc98RD/DMHh4rOn/4WdCLYtbB5yexw+lljnjoQAJd4m9iNvW/w5xhUQeY1hEAINeb6oUZYuyEf12iATUPJfyBaUZz+AaqUoC+hOVDdvX095Ly74QXoC65AEmXk4fRdFTtrOOTH9uyP9cyZPQRF7KBT0dEEtB2oPb2qP0WkgCMyNRwxaYlMKGE5LXk3AklQ3LR+SGTeDHVBdX6BmV7qFx+fGEI88UJXsCJGp8eKWAOtsiktN6saE34=
-    user:
-      secure: go7wqRGT44VON3oSRJDPKmoBfGP1Wo0wyya+RcuYvfQV74WQiPqV8T4C8pTQH0rUir/LbcXghU96h33H0H0/mQOnAYj81+nM1xb3TwJ8f5P4VmBQTQZEWTkn26M0PQC6Lo9C/Y2Kg9rJ3FIK0MNgufPDgPPv0FEvBVo3mqvpmcoagaQvy1/wgaPjef+8Kt4KYtIIHyEHfUEw8G+KzBKq/IJYNZWNfkXuutHY0zRIuE/pPDriNTodQgSdkJ2bWQywH7Ia6fFp07PqivZ8KmAmV6etH6Xbm54VI73PwuXwBrOcd05FrE1vEljPBMW60JiTrP9nAfttVodvgl/cWTQEC0edaBxmkmqiQtrdQxe0hrypJLygxO4XIhbxO0oup77SGk7P9NXmgUeV+nk5xSsko4AJQTqjeX+6fxaGwgWfgRy81y2PipgJ0h+pRoILvBI/RtHZ37VYfjx7z59twLvUdhGxFCXi5J5oQoFnp7OFWJaUptCzgfUsKE0GWlsMLkOBHeAydlYtl6FTMmCzeTAK6bEPp72wqW9YlS1yePIRDkLRaCAOViyD29Po9YPy3xrw1eexAiTOx1/ZdNKgEbMMshqTu1Zcb9MfnoyRHf4elqKPzrZiqYN67/C6gXKiQsNp7EjRU46QOM03HmfEW/RPZJn7Sl8KOuJvPzCdSLoF12E=
-  - provider: bintray
-    on:
-      branch: hermit
-    skip_cleanup: true
-    file: ".bintray_descriptor_aarch64.json"
     key:
       secure: PS8LR8fsW15Rr9MAq6reuAkRujAZppPOtxNvz4+NPj53/G3BP7yyxKNgmhTPkqpC2SRSXSHsue4O9LrfddTiX10W/tXbDoO7o+E3sXhqfYoizPfeSxi9em41eSFuJeRH9MknAxX8lLST2DdUEXcjFVFqUdBvAsn2FmneKx/+Pn2MG67hPZx+dn45PgPjBIaGiix3xiM5+144cR7XrOxrE3WKVUbntZYwUyvU9tGmHHkiMMTCrq3wX3XYZhaHeqzcN/YKpKRfhlx/Sa5jJBchpCZWeRKnj3H6XdSUE3C0M5w8YkOjWsQYPaXAc+o2XSnrkgx0dV9p9o26hFZq4hYH1LmI2d+Ct2bTpX12YzBYViQplUtjJkUjOtmqS/e669XeuN77h64xNDUS3yOLvb2rOmferNjkrPc0U+6S71P70YgDEz/oJx0rvxcc98RD/DMHh4rOn/4WdCLYtbB5yexw+lljnjoQAJd4m9iNvW/w5xhUQeY1hEAINeb6oUZYuyEf12iATUPJfyBaUZz+AaqUoC+hOVDdvX095Ly74QXoC65AEmXk4fRdFTtrOOTH9uyP9cyZPQRF7KBT0dEEtB2oPb2qP0WkgCMyNRwxaYlMKGE5LXk3AklQ3LR+SGTeDHVBdX6BmV7qFx+fGEI88UJXsCJGp8eKWAOtsiktN6saE34=
     user:

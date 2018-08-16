@@ -3,7 +3,7 @@
          "name": "binutils-hermit",
          "repo": "REPLACE_REPO",
          "subject": "hermitcore",
-         "desc": "Cross-build binary utilities for HermitCore (x86_64-hermit target)",
+         "desc": "Cross-build binary utilities for HermitCore",
          "website_url": "https://hermitcore.org",
          "issue_tracker_url": "https://github.com/hermitcore/libhermit/issues",
          "vcs_url": "https://github.com/hermitcore/binutils.git",
@@ -16,7 +16,7 @@
 
      "version": {
          "name": "2.30.51",
-         "desc": "Cross-build binary utilities for HermitCore (x86_64-hermit target)",
+         "desc": "Cross-build binary utilities for HermitCore",
          "gpgSign": false
      },
 
