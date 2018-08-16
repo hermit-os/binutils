@@ -24,6 +24,7 @@ before_deploy:
 - dpkg-deb -b ${ARCH}-hermit_unpacked binutils-${TARGET}_2.30.51-1_amd64.deb
 - sed -i "s/REPLACE_REPO/$OS_TYPE/" .bintray_descriptor.json
 - sed -i "s/REPLACE_NAME/$TARGET/" .bintray_descriptor.json
+- sed -i "s/REPLACE_OS/$OS_NAME/" .bintray_descriptor.json
 deploy:
   - provider: bintray
     on:
