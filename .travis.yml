@@ -6,8 +6,8 @@ env:
   matrix:
   - OS_TYPE=ubuntu OS_VERSION=18.04 OS_NAME=bionic TARGET=hermit ARCH=x86_64
   - OS_TYPE=ubuntu OS_VERSION=18.04 OS_NAME=bionic TARGET=hermit-aarch64 ARCH=aarch64
-  - OS_TYPE=debian OS_VERSION=8 OS_NAME=jessie TARGET=hermit ARCH=x86_64
-  - OS_TYPE=debian OS_VERSION=8 OS_NAME=jessie TARGET=hermit-aarch64 ARCH=aarch64
+  - OS_TYPE=debian OS_VERSION=9 OS_NAME=stretch TARGET=hermit ARCH=x86_64
+  - OS_TYPE=debian OS_VERSION=9 OS_NAME=stretch TARGET=hermit-aarch64 ARCH=aarch64
 services:
 - docker
 addons:
