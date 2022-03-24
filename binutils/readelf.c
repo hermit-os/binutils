@@ -3747,6 +3747,7 @@ get_osabi_name (Filedata * filedata, unsigned int osabi)
     case ELFOSABI_FENIXOS:	return "FenixOS";
     case ELFOSABI_CLOUDABI:	return "Nuxi CloudABI";
     case ELFOSABI_OPENVOS:	return "Stratus Technologies OpenVOS";
+    case ELFOSABI_STANDALONE:	return "Standalone (embedded) application";
     default:
       if (osabi >= 64)
 	switch (filedata->file_header.e_machine)

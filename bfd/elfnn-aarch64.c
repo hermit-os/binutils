@@ -9710,6 +9710,26 @@ const struct elf_size_info elfNN_aarch64_size_info =
 
 #include "elfNN-target.h"
 
+/* HermitCore support.  */
+
+#undef	TARGET_LITTLE_SYM
+#define	TARGET_LITTLE_SYM	aarch64_elfNN_le_hermit_vec
+#undef	TARGET_LITTLE_NAME
+#define	TARGET_LITTLE_NAME	"elfNN-littleaarch64-hermit"
+#undef	TARGET_BIG_SYM
+#define	TARGET_BIG_SYM		aarch64_elfNN_be_hermit_vec
+#undef	TARGET_BIG_NAME
+#define	TARGET_BIG_NAME		"elfNN-bigaarch64-hermit"
+
+#undef	ELF_OSABI
+#define	ELF_OSABI		ELFOSABI_STANDALONE
+
+#undef	elfNN_bed
+#define	elfNN_bed		elfNN_aarch64_hermit_bed
+
+
+#include "elfNN-target.h"
+
 /* CloudABI support.  */
 
 #undef	TARGET_LITTLE_SYM

@@ -4775,6 +4775,7 @@ Set the matching input ELF file OSABI to @var{osabi}.  If
 
 The supported ELF OSABIs are, @var{none}, @var{HPUX}, @var{NetBSD},
 @var{GNU}, @var{Linux} (alias for @var{GNU}),
+@var{HermitCore},
 @var{Solaris}, @var{AIX}, @var{Irix},
 @var{FreeBSD}, @var{TRU64}, @var{Modesto}, @var{OpenBSD}, @var{OpenVMS},
 @var{NSK}, @var{AROS} and @var{FenixOS}.

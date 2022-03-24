@@ -390,6 +390,8 @@ ALL_64_EMULATION_SOURCES = \
 	eaarch64elf32b.c \
 	eaarch64cloudabi.c \
 	eaarch64cloudabib.c \
+	eaarch64hermit.c \
+	eaarch64hermitb.c \
 	eaarch64fbsd.c \
 	eaarch64fbsdb.c \
 	eaarch64linux.c \
@@ -453,6 +455,7 @@ ALL_64_EMULATION_SOURCES = \
 	eelf_k1om_fbsd.c \
 	eelf_x86_64.c \
 	eelf_x86_64_cloudabi.c \
+	eelf_x86_64_hermit.c \
 	eelf_x86_64_fbsd.c \
 	eelf_x86_64_nacl.c \
 	eelf_x86_64_sol2.c \
@@ -1518,6 +1521,12 @@ eaarch64cloudabib.c: $(srcdir)/emulparams/aarch64cloudabib.sh $(srcdir)/emulpara
   $(ELF_DEPS) $(srcdir)/emultempl/aarch64elf.em \
   $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
 
+eaarch64hermit.c: $(srcdir)/emulparams/aarch64hermit.sh \
+  $(ELF_DEPS) $(srcdir)/scripttempl/elf-hermit.sc ${GEN_DEPENDS}
+
+eaarch64hermitb.c: $(srcdir)/emulparams/aarch64hermitb.sh \
+  $(ELF_DEPS) $(srcdir)/scripttempl/elf-hermit.sc ${GEN_DEPENDS}
+
 eaarch64fbsd.c: $(srcdir)/emulparams/aarch64fbsd.sh \
   $(ELF_DEPS) $(srcdir)/emultempl/aarch64elf.em \
   $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
@@ -1836,6 +1845,9 @@ eelf_x86_64.c: $(srcdir)/emulparams/elf_x86_64.sh \
 eelf_x86_64_cloudabi.c: $(srcdir)/emulparams/elf_x86_64_cloudabi.sh \
   $(srcdir)/emulparams/elf_x86_64.sh \
   $(ELF_X86_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+
+eelf_x86_64_hermit.c: $(srcdir)/emulparams/elf_x86_64_hermit.sh \
+  $(ELF_DEPS) $(srcdir)/scripttempl/elf-hermit.sc ${GEN_DEPENDS}
 
 eelf_x86_64_fbsd.c: $(srcdir)/emulparams/elf_x86_64_fbsd.sh \
   $(srcdir)/emulparams/elf_x86_64.sh \

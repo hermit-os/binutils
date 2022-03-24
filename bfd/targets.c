@@ -590,9 +590,11 @@ extern const bfd_target aarch64_elf32_be_vec;
 extern const bfd_target aarch64_elf32_le_vec;
 extern const bfd_target aarch64_elf64_be_vec;
 extern const bfd_target aarch64_elf64_be_cloudabi_vec;
+extern const bfd_target aarch64_elf64_be_hermit_vec;
 extern const bfd_target aarch64_elf64_le_vec;
 extern const bfd_target aarch64_elf64_le_cloudabi_vec;
 extern const bfd_target aarch64_mach_o_vec;
+extern const bfd_target aarch64_elf64_le_hermit_vec;
 extern const bfd_target alpha_ecoff_le_vec;
 extern const bfd_target alpha_elf64_vec;
 extern const bfd_target alpha_elf64_fbsd_vec;
@@ -843,6 +845,7 @@ extern const bfd_target x86_64_elf32_vec;
 extern const bfd_target x86_64_elf32_nacl_vec;
 extern const bfd_target x86_64_elf64_vec;
 extern const bfd_target x86_64_elf64_cloudabi_vec;
+extern const bfd_target x86_64_elf64_hermit_vec;
 extern const bfd_target x86_64_elf64_fbsd_vec;
 extern const bfd_target x86_64_elf64_nacl_vec;
 extern const bfd_target x86_64_elf64_sol2_vec;
@@ -903,8 +906,10 @@ static const bfd_target * const _bfd_target_vector[] =
 	&aarch64_elf32_be_vec,
 	&aarch64_elf32_le_vec,
 	&aarch64_elf64_be_vec,
+	&aarch64_elf64_be_hermit_vec,
 	&aarch64_elf64_be_cloudabi_vec,
 	&aarch64_elf64_le_vec,
+	&aarch64_elf64_le_hermit_vec,
 	&aarch64_elf64_le_cloudabi_vec,
 	&aarch64_mach_o_vec,
 #endif
@@ -1257,6 +1262,7 @@ static const bfd_target * const _bfd_target_vector[] =
 	&x86_64_elf32_nacl_vec,
 	&x86_64_elf64_vec,
 	&x86_64_elf64_cloudabi_vec,
+	&x86_64_elf64_hermit_vec,
 	&x86_64_elf64_fbsd_vec,
 	&x86_64_elf64_nacl_vec,
 	&x86_64_elf64_sol2_vec,

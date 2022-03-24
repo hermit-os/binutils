@@ -123,6 +123,7 @@ generic_target=${cpu_type}-$vendor-$os
 case ${generic_target} in
   aarch64*-*-elf*)			fmt=elf;;
   aarch64*-*-fuchsia*)			fmt=elf;;
+  aarch64*-*-hermit*)			fmt=elf em=hermit ;;
   aarch64*-*-linux*)			fmt=elf em=linux
     case ${cpu}-${os} in
       aarch64*-linux-gnu_ilp32)		arch=aarch64:32 ;;
@@ -255,6 +256,7 @@ case ${generic_target} in
   i386-*-chaos)				fmt=elf ;;
   i386-*-rdos*)				fmt=elf ;;
   i386-*-darwin*)			fmt=macho ;;
+  i386-*-hermit*)			fmt=elf em=hermit ;;
 
   ia16-*-elf*)				fmt=elf ;;
 

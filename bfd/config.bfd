@@ -264,6 +264,11 @@ case "${targ}" in
     targ_selvecs="aarch64_elf64_le_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_be_vec arm_elf32_le_vec"
     want64=true
     ;;
+  aarch64-*-hermit*)
+    targ_defvec=aarch64_elf64_le_hermit_vec
+    targ_selvecs="aarch64_elf64_be_hermit_vec"
+    want64=true
+    ;;
   alpha*-*-freebsd* | alpha*-*-kfreebsd*-gnu)
     targ_defvec=alpha_elf64_fbsd_vec
     targ_selvecs="alpha_elf64_vec alpha_ecoff_le_vec"
@@ -705,6 +710,11 @@ case "${targ}" in
     ;;
   x86_64-*-rdos*)
     targ_defvec=x86_64_elf64_vec
+    want64=true
+    ;;
+  x86_64-*-hermit*)
+    targ_defvec=x86_64_elf64_hermit_vec
+    targ_selvecs="i386_elf32_vec x86_64_elf32_vec"
     want64=true
     ;;
   x86_64-*-redox*)

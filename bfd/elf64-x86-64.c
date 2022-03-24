@@ -5079,6 +5079,20 @@ elf_x86_64_special_sections[]=
 
 #include "elf64-target.h"
 
+/* HermitCore support */
+#undef  TARGET_LITTLE_SYM
+#define TARGET_LITTLE_SYM		    x86_64_elf64_hermit_vec
+#undef  TARGET_LITTLE_NAME
+#define TARGET_LITTLE_NAME		    "elf64-x86-64-hermit"
+
+#undef  ELF_OSABI
+#define ELF_OSABI               ELFOSABI_STANDALONE
+
+#undef  elf64_bed
+#define elf64_bed elf64_x86_64_hermit_bed
+
+#include "elf64-target.h"
+
 /* FreeBSD support.  */
 
 #undef	TARGET_LITTLE_SYM
