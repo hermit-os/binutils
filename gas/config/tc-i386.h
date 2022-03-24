@@ -63,6 +63,10 @@ extern unsigned long i386_mach (void);
 #define ELF_TARGET_FORMAT64	"elf64-x86-64-cloudabi"
 #endif
 
+#ifdef TE_HERMIT
+#define ELF_TARGET_FORMAT64     "elf64-x86-64-hermit"
+#endif
+
 #ifdef TE_SOLARIS
 #define ELF_TARGET_FORMAT	"elf32-i386-sol2"
 #define ELF_TARGET_FORMAT64	"elf64-x86-64-sol2"

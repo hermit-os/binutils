@@ -10220,6 +10220,12 @@ elf64_aarch64_target_format (void)
     return "elf64-bigaarch64-cloudabi";
   else
     return "elf64-littleaarch64-cloudabi";
+#elif defined TE_HERMIT
+  /* FIXME: What to do for ilp32_p ?  */
+  if (target_big_endian)
+    return "elf64-bigaarch64-hermit";
+  else
+    return "elf64-littleaarch64-hermit";
 #else
   if (target_big_endian)
     return ilp32_p ? "elf32-bigaarch64" : "elf64-bigaarch64";
