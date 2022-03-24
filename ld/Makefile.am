@@ -381,6 +381,8 @@ ALL_64_EMULATION_SOURCES = \
 	eaarch64elf32.c \
 	eaarch64elf32b.c \
 	eaarch64elfb.c \
+	eaarch64hermit.c \
+	eaarch64hermitb.c \
 	eaarch64fbsd.c \
 	eaarch64fbsdb.c \
 	eaarch64haiku.c \
@@ -460,6 +462,7 @@ ALL_64_EMULATION_SOURCES = \
 	eelf_mipsel_haiku.c \
 	eelf_x86_64.c \
 	eelf_x86_64_cloudabi.c \
+	eelf_x86_64_hermit.c \
 	eelf_x86_64_fbsd.c \
 	eelf_x86_64_haiku.c \
 	eelf_x86_64_sol2.c \

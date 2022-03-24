@@ -142,6 +142,7 @@ case $1 in
 		maybe_os=$field2-$field3
 		case $maybe_os in
 			  cloudabi*-eabi* \
+			| hermit* \
 			| kfreebsd*-gnu* \
 			| knetbsd*-gnu* \
 			| kopensolaris*-gnu* \
@@ -2014,6 +2015,7 @@ case $os in
 	| go32* \
 	| haiku* \
 	| hcos* \
+	| hermit* \
 	| hiux* \
 	| hms* \
 	| hpux* \

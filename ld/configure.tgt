@@ -124,6 +124,9 @@ aarch64-*-gnu*)
 aarch64-*-haiku*)	targ_emul=aarch64haiku
 			targ_extra_emuls="aarch64elf aarch64elf32 aarch64elf32b aarch64elfb armelf armelfb armelf_haiku $targ_extra_libpath"
 			;;
+aarch64-*-hermit*)	targ_emul=aarch64hermit
+			targ_extra_emuls="aarch64hermitb"
+			;;
 aarch64-*-nto*)		targ_emul=aarch64nto
 			targ_extra_emuls="aarch64elf aarch64elf32 aarch64elf32b aarch64elfb armelf armelfb"
 			;;
@@ -454,6 +457,8 @@ ia16-*-elf*)		targ_emul=elf_i386
 			targ_extra_emuls=i386msdos
 			;;
 ia64-*-elf*)		targ_emul=elf64_ia64
+			;;
+x86_64-*-hermit*)	targ_emul=elf_x86_64_hermit
 			;;
 ia64-*-freebsd* | ia64-*-kfreebsd*-gnu)
 			targ_emul=elf64_ia64_fbsd
