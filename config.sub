@@ -145,6 +145,7 @@ case $1 in
 			nto-qnx* | linux-* | uclinux-uclibc* \
 			| uclinux-gnu* | kfreebsd*-gnu* | knetbsd*-gnu* | netbsd*-gnu* \
 			| netbsd*-eabi* | kopensolaris*-gnu* | cloudabi*-eabi* \
+			| hermit* \
 			| storm-chaos* | os2-emx* | rtmk-nova*)
 				basic_machine=$field1
 				basic_os=$maybe_os
@@ -1732,6 +1733,7 @@ case $os in
 	     | mpw* | magic* | mmixware* | mon960* | lnews* \
 	     | amigaos* | amigados* | msdos* | newsos* | unicos* | aof* \
 	     | aos* | aros* | cloudabi* | sortix* | twizzler* \
+		 | hermit* \
 	     | nindy* | vxsim* | vxworks* | ebmon* | hms* | mvs* \
 	     | clix* | riscos* | uniplus* | iris* | isc* | rtu* | xenix* \
 	     | mirbsd* | netbsd* | dicos* | openedition* | ose* \

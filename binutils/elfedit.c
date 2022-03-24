@@ -817,6 +817,7 @@ static const struct
 osabis[] =
 {
   { ELFOSABI_NONE, "none" },
+  { ELFOSABI_STANDALONE, "Standalone" },
   { ELFOSABI_HPUX, "HPUX" },
   { ELFOSABI_NETBSD, "NetBSD" },
   { ELFOSABI_GNU, "GNU" },
