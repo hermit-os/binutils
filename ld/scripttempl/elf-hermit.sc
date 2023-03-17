@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017, Stefan Lankes, RWTH Aachen University
+# Copyright (C) 2015-2023, Stefan Lankes, RWTH Aachen University
 #
 # Copying and distribution of this file, with or without modification,
 # are permitted in any medium without royalty provided the copyright
@@ -15,35 +15,9 @@ cat <<EOF
 OUTPUT_FORMAT("${OUTPUT_FORMAT}")
 OUTPUT_ARCH("${ARCH}")
 ENTRY(_start)
-phys = ${TEXT_START_ADDR};
-cores = 512;
 
 SECTIONS
 {
-  kernel_start =  phys;
-  .mboot phys : AT(ADDR(.mboot)) {
-    *(.mboot)
-    . = ALIGN((1 << 12));
-    *(.kmsg)
-  }
-  .percore : {
-    . = ALIGN(64);
-    percore_start = .;
-    *(.percore)
-    . = ALIGN(64);
-    percore_end0 = .;
-	/* reserve space for more cores */
-    . += cores * (percore_end0 - percore_start) - (percore_end0 - percore_start);
-    percore_end = .;
-  }
-  .ktext ALIGN(4096) : AT(ADDR(.ktext)) {
-    *(.ktext)
-    *(.ktext.*)
-  }
-  .kdata : {
-    *(.kdata)
-    *(.kdata.*)
-  }
   .init : {
     KEEP (*(SORT_NONE(.init)))
   }
