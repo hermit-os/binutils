@@ -1232,6 +1232,11 @@ case "${targ}" in
     targ_selvecs="riscv_elf32_vec riscv_elf64_vec riscv_elf32_be_vec riscv_elf64_be_vec riscv64_pei_vec"
     want64=true
     ;;
+  riscv64*-*-hermit*)
+    targ_defvec=riscv_elf64_hermit_vec
+    targ_selvec="riscv_elf64_be_hermit_vec"
+    want64=true
+    ;;
   riscv64be*-*-*)
     targ_defvec=riscv_elf64_be_vec
     targ_selvecs="riscv_elf32_vec riscv_elf64_vec riscv_elf32_be_vec riscv_elf64_be_vec riscv64_pei_vec"

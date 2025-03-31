@@ -375,6 +375,7 @@ case ${generic_target} in
   pru-*-*)				fmt=elf ;;
 
   riscv*-*-haiku*)			fmt=elf endian=little em=haiku ;;
+  riscv*-*-hermit*)			fmt=elf em=hermit ;;
   riscv*-*-*)				fmt=elf ;;
 
   rx-*-linux*)				fmt=elf em=linux ;;

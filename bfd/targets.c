@@ -867,6 +867,10 @@ extern const bfd_target riscv_elf32_vec;
 extern const bfd_target riscv_elf64_vec;
 extern const bfd_target riscv_elf32_be_vec;
 extern const bfd_target riscv_elf64_be_vec;
+extern const bfd_target riscv_elf64_hermit_vec;
+extern const bfd_target riscv_elf32_hermit_vec;
+extern const bfd_target riscv_elf32_be_hermit_vec;
+extern const bfd_target riscv_elf64_be_hermit_vec;
 extern const bfd_target riscv64_pei_vec;
 extern const bfd_target rl78_elf32_vec;
 extern const bfd_target rs6000_xcoff64_vec;
@@ -1266,6 +1270,10 @@ static const bfd_target * const _bfd_target_vector[] =
 	&riscv_elf32_be_vec,
 	&riscv_elf64_be_vec,
 	&riscv64_pei_vec,
+	&riscv_elf64_hermit_vec,
+	&riscv_elf32_hermit_vec,
+	&riscv_elf64_be_hermit_vec,
+	&riscv_elf32_be_hermit_vec,
 #endif
 	&rl78_elf32_vec,
 

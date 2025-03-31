@@ -830,6 +830,9 @@ riscv-*-* | riscv32*-*-*)
 			targ_extra_emuls="elf64lriscv elf32briscv elf64briscv"
 			targ_extra_libpath=$targ_extra_emuls
 			;;
+riscv64*-*-hermit*)	targ_emul=elf64lriscv 
+			targ_extra_emuls="elf64briscv"
+			;;
 riscv64be*-*-linux*)	targ_emul=elf64briscv
 			targ_extra_emuls="elf64briscv_lp64f elf64briscv_lp64 elf32briscv elf32briscv_ilp32f elf32briscv_ilp32 elf64lriscv elf64lriscv_lp64f elf64lriscv_lp64 elf32lriscv elf32lriscv_ilp32f elf32lriscv_ilp32"
 			targ_extra_libpath=$targ_extra_emuls

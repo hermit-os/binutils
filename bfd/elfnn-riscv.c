@@ -5804,3 +5804,22 @@ riscv_elf_merge_symbol_attribute (struct elf_link_hash_entry *h,
 #define elf_backend_obj_attrs_handle_unknown	riscv_elf_obj_attrs_handle_unknown
 
 #include "elfNN-target.h"
+
+/* Hermit OS support.  */
+
+#undef	TARGET_LITTLE_SYM
+#define	TARGET_LITTLE_SYM	riscv_elfNN_hermit_vec
+#undef	TARGET_LITTLE_NAME
+#define	TARGET_LITTLE_NAME	"elfNN-littleriscv-hermit"
+#undef	TARGET_BIG_SYM
+#define	TARGET_BIG_SYM		riscv_elfNN_be_hermit_vec
+#undef	TARGET_BIG_NAME
+#define	TARGET_BIG_NAME		"elfNN-bigriscv-hermit"
+
+#undef ELF_OSABI
+#define ELF_OSABI ELFOSABI_STANDALONE
+
+#undef	elfNN_bed
+#define	elfNN_bed		elfNN_riscv_hermit_bed
+
+#include "elfNN-target.h"

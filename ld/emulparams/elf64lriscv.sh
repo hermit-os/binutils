@@ -12,4 +12,8 @@ case "$target" in
 	LIBPATH_SUFFIX="64/lp64d 64";;
     esac
     ;;
+  riscv64*-hermit*)
+    OUTPUT_FORMAT="elf64-littleriscv-hermit"
+    ENABLE_INITFINI_ARRAY=yes
+    ;;
 esac

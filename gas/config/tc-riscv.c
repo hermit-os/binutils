@@ -737,10 +737,17 @@ riscv_check_mapping_symbols (bfd *abfd ATTRIBUTE_UNUSED,
 const char *
 riscv_target_format (void)
 {
+#ifdef TE_HERMIT
+  if (target_big_endian)
+    return xlen == 64 ? "elf64-bigriscv-hermit" : "elf32-bigriscv-hermit";
+  else 
+    return xlen == 64 ? "elf64-littleriscv-hermit" : "elf32-littleriscv-hermit";
+#else 
   if (target_big_endian)
     return xlen == 64 ? "elf64-bigriscv" : "elf32-bigriscv";
   else
     return xlen == 64 ? "elf64-littleriscv" : "elf32-littleriscv";
+#endif
 }
 
 /* Return the length of instruction INSN.  */
